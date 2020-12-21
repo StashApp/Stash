@@ -64,7 +64,7 @@ func (e *Encoder) Transcode(probeResult VideoFile, options TranscodeOptions) {
 		"-strict", "-2",
 		options.OutputPath,
 	}
-	_, _ = e.run(probeResult, args)
+	e.run(probeResult, args)
 }
 
 //transcode the video, remove the audio
@@ -84,7 +84,7 @@ func (e *Encoder) TranscodeVideo(probeResult VideoFile, options TranscodeOptions
 		"-vf", "scale=" + scale,
 		options.OutputPath,
 	}
-	_, _ = e.run(probeResult, args)
+	e.run(probeResult, args)
 }
 
 //copy the video stream as is, transcode audio
@@ -96,7 +96,7 @@ func (e *Encoder) TranscodeAudio(probeResult VideoFile, options TranscodeOptions
 		"-strict", "-2",
 		options.OutputPath,
 	}
-	_, _ = e.run(probeResult, args)
+	e.run(probeResult, args)
 }
 
 //copy the video stream as is, drop audio
@@ -107,5 +107,5 @@ func (e *Encoder) CopyVideo(probeResult VideoFile, options TranscodeOptions) {
 		"-c:v", "copy",
 		options.OutputPath,
 	}
-	_, _ = e.run(probeResult, args)
+	e.run(probeResult, args)
 }

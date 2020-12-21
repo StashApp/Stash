@@ -127,6 +127,9 @@ type Query {
   
   # LatestVersion
   latestversion: ShortVersion!
+
+  # Get Scene Errors
+  getSceneErrors: [SceneError!]!
 }
 
 type Mutation {
@@ -224,6 +227,10 @@ type Mutation {
 
   """ Submit fingerprints to stash-box instance """
   submitStashBoxFingerprints(input: StashBoxFingerprintSubmissionInput!): Boolean!
+
+  """ Scene error mutations """
+  addSceneError(input: SceneErrorInput!): SceneError
+  clearRecurringSceneErrors(type: String!): Boolean!
 }
 
 type Subscription {

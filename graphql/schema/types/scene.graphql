@@ -155,3 +155,18 @@ type SceneStreamEndpoint {
   mime_type: String
   label: String
 }
+
+type SceneError {
+  scene: Scene
+  related_scene: Scene
+  error_type: String!
+  details: String!
+}
+
+input SceneErrorInput {
+  scene_id: ID
+  related_scene_id: ID
+  error_type: String!
+  details: String
+  recurring: String
+}

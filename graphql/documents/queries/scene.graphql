@@ -62,3 +62,20 @@ query SceneStreams($id: ID!) {
     label
   }
 }
+
+query GetSceneErrors {
+  getSceneErrors {
+    scene {
+      title
+      path
+      id
+    }
+    related_scene {
+      title
+      path
+      id
+    }
+    error_type
+    details
+  }
+}

@@ -4,7 +4,7 @@ import (
 	"github.com/stashapp/stash/pkg/ffmpeg"
 )
 
-func makeScreenshot(probeResult ffmpeg.VideoFile, outputPath string, quality int, width int, time float64) {
+func makeScreenshot(probeResult ffmpeg.VideoFile, outputPath string, quality int, width int, time float64) string {
 	encoder := ffmpeg.NewEncoder(instance.FFMPEGPath)
 	options := ffmpeg.ScreenshotOptions{
 		OutputPath: outputPath,
@@ -12,5 +12,6 @@ func makeScreenshot(probeResult ffmpeg.VideoFile, outputPath string, quality int
 		Time:       time,
 		Width:      width,
 	}
-	encoder.Screenshot(probeResult, options)
+	ffmpegerr, _ := encoder.Screenshot(probeResult, options)
+	return ffmpegerr
 }

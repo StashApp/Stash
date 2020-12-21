@@ -70,3 +70,15 @@
     list-style: none;
   }
 }
+
+.warnings-table {
+  table-layout: fixed;
+
+  &-scene {
+    width: 40%;
+  }
+
+  &-type {
+    width: 12rem;
+  }
+}

@@ -370,13 +370,14 @@ func (t *ScanTask) scanScene() *models.Scene {
 
 		// We already have this item in the database
 		// check for thumbnails,screenshots
-		t.makeScreenshots(nil, scene.GetHash(t.fileNamingAlgorithm))
+		t.makeScreenshots(nil, scene.GetHash(t.fileNamingAlgorithm), scene.ID)
 
 		// check for container
 		if !scene.Format.Valid {
 			videoFile, err := ffmpeg.NewVideoFile(instance.FFProbePath, t.FilePath)
 			if err != nil {
 				logger.Error(err.Error())
+				models.PushSceneError(scene.ID, "ffprobe", "scan", err.Error())
 				return nil
 			}
 			container := ffmpeg.MatchContainer(videoFile.Container, t.FilePath)
@@ -458,6 +459,7 @@ func (t *ScanTask) scanScene() *models.Scene {
 	videoFile, err := ffmpeg.NewVideoFile(instance.FFProbePath, t.FilePath)
 	if err != nil {
 		logger.Error(err.Error())
+		models.PushSceneError(-1, "ffprobe", "scan", err.Error())
 		return nil
 	}
 	container := ffmpeg.MatchContainer(videoFile.Container, t.FilePath)
@@ -500,8 +502,6 @@ func (t *ScanTask) scanScene() *models.Scene {
 		sceneHash = checksum
 	}
 
-	t.makeScreenshots(videoFile, sceneHash)
-
 	var retScene *models.Scene
 
 	ctx := context.TODO()
@@ -510,6 +510,7 @@ func (t *ScanTask) scanScene() *models.Scene {
 		exists, _ := utils.FileExists(scene.Path)
 		if exists {
 			logger.Infof("%s already exists. Duplicate of %s", t.FilePath, scene.Path)
+			models.PushSceneError(scene.ID, "Duplicate", "scan", t.FilePath)
 		} else {
 			logger.Infof("%s already exists. Updating path...", t.FilePath)
 			scenePartial := models.ScenePartial{
@@ -549,6 +550,10 @@ func (t *ScanTask) scanScene() *models.Scene {
 		}
 
 		retScene, err = qb.Create(newScene, tx)
+	}
+
+	if retScene != nil {
+		t.makeScreenshots(videoFile, sceneHash, retScene.ID)
 	}
 
 	if err != nil {
@@ -635,7 +640,8 @@ func (t *ScanTask) rescanScene(scene *models.Scene, fileModTime time.Time) (*mod
 
 	return ret, nil
 }
-func (t *ScanTask) makeScreenshots(probeResult *ffmpeg.VideoFile, checksum string) {
+
+func (t *ScanTask) makeScreenshots(probeResult *ffmpeg.VideoFile, checksum string, sceneID int) {
 	thumbPath := instance.Paths.Scene.GetThumbnailScreenshotPath(checksum)
 	normalPath := instance.Paths.Scene.GetScreenshotPath(checksum)
 
@@ -652,6 +658,7 @@ func (t *ScanTask) makeScreenshots(probeResult *ffmpeg.VideoFile, checksum strin
 
 		if err != nil {
 			logger.Error(err.Error())
+			models.PushSceneError(sceneID, "ffprobe", "scan", err.Error())
 			return
 		}
 		logger.Infof("Regenerating images for %s", t.FilePath)
@@ -661,12 +668,18 @@ func (t *ScanTask) makeScreenshots(probeResult *ffmpeg.VideoFile, checksum strin
 
 	if !thumbExists {
 		logger.Debugf("Creating thumbnail for %s", t.FilePath)
-		makeScreenshot(*probeResult, thumbPath, 5, 320, at)
+		ffmpegerr := makeScreenshot(*probeResult, thumbPath, 5, 320, at)
+		if ffmpegerr != "" {
+			models.PushSceneError(sceneID, "ffmpeg", "scan", ffmpegerr)
+		}
 	}
 
 	if !normalExists {
 		logger.Debugf("Creating screenshot for %s", t.FilePath)
-		makeScreenshot(*probeResult, normalPath, 2, probeResult.Width, at)
+		ffmpegerr := makeScreenshot(*probeResult, normalPath, 2, probeResult.Width, at)
+		if ffmpegerr != "" {
+			models.PushSceneError(sceneID, "ffmpeg", "scan", ffmpegerr)
+		}
 	}
 }
 

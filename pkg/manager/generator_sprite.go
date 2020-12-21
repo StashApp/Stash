@@ -55,24 +55,26 @@ func NewSpriteGenerator(videoFile ffmpeg.VideoFile, videoChecksum string, imageO
 	}, nil
 }
 
-func (g *SpriteGenerator) Generate() error {
+func (g *SpriteGenerator) Generate() (error, int) {
 	encoder := ffmpeg.NewEncoder(instance.FFMPEGPath)
 
-	if err := g.generateSpriteImage(&encoder); err != nil {
-		return err
+	err, ffmpegErrCount := g.generateSpriteImage(&encoder)
+	if err != nil {
+		return err, ffmpegErrCount
 	}
 	if err := g.generateSpriteVTT(&encoder); err != nil {
-		return err
+		return err, ffmpegErrCount
 	}
-	return nil
+	return nil, ffmpegErrCount
 }
 
-func (g *SpriteGenerator) generateSpriteImage(encoder *ffmpeg.Encoder) error {
+func (g *SpriteGenerator) generateSpriteImage(encoder *ffmpeg.Encoder) (error, int) {
 	if !g.Overwrite && g.imageExists() {
-		return nil
+		return nil, 0
 	}
 	logger.Infof("[generator] generating sprite image for %s", g.Info.VideoFile.Path)
 
+	encodingErrorCount := 0
 	// Create `this.chunkCount` thumbnails in the tmp directory
 	stepSize := g.Info.VideoFile.Duration / float64(g.Info.ChunkCount)
 	for i := 0; i < g.Info.ChunkCount; i++ {
@@ -85,7 +87,10 @@ func (g *SpriteGenerator) generateSpriteImage(encoder *ffmpeg.Encoder) error {
 			Time:       time,
 			Width:      160,
 		}
-		encoder.Screenshot(g.Info.VideoFile, options)
+		ffmpegerr, _ := encoder.Screenshot(g.Info.VideoFile, options)
+		if ffmpegerr != "" {
+			encodingErrorCount += 1
+		}
 	}
 
 	// Combine all of the thumbnails into a sprite image
@@ -96,13 +101,13 @@ func (g *SpriteGenerator) generateSpriteImage(encoder *ffmpeg.Encoder) error {
 	for _, imagePath := range imagePaths {
 		img, err := imaging.Open(imagePath)
 		if err != nil {
-			return err
+			return err, encodingErrorCount
 		}
 		images = append(images, img)
 	}
 
 	if len(images) == 0 {
-		return fmt.Errorf("images slice is empty, failed to generate sprite images for %s", g.Info.VideoFile.Path)
+		return fmt.Errorf("images slice is empty, failed to generate sprite images for %s", g.Info.VideoFile.Path), encodingErrorCount
 	}
 	width := images[0].Bounds().Size().X
 	height := images[0].Bounds().Size().Y
@@ -116,7 +121,7 @@ func (g *SpriteGenerator) generateSpriteImage(encoder *ffmpeg.Encoder) error {
 		montage = imaging.Paste(montage, img, image.Pt(x, y))
 	}
 
-	return imaging.Save(montage, g.ImageOutputPath)
+	return imaging.Save(montage, g.ImageOutputPath), encodingErrorCount
 }
 
 func (g *SpriteGenerator) generateSpriteVTT(encoder *ffmpeg.Encoder) error {

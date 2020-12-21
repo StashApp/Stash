@@ -1,8 +1,9 @@
 package manager
 
 import (
-	"github.com/remeh/sizedwaitgroup"
+	"fmt"
 
+	"github.com/remeh/sizedwaitgroup"
 	"github.com/stashapp/stash/pkg/ffmpeg"
 	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
@@ -39,7 +40,11 @@ func (t *GenerateSpriteTask) Start(wg *sizedwaitgroup.SizedWaitGroup) {
 	}
 	generator.Overwrite = t.Overwrite
 
-	if err := generator.Generate(); err != nil {
+	err, ffmpegErrCount := generator.Generate()
+	if ffmpegErrCount > 0 {
+		models.SetSceneError(t.Scene.ID, "sprite_generation", "", fmt.Sprintf("%d sprites failed to generate.", ffmpegErrCount))
+	}
+	if err != nil {
 		logger.Errorf("error generating sprite: %s", err.Error())
 		return
 	}

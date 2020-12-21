@@ -82,7 +82,7 @@ func KillRunningEncoders(path string) {
 	}
 }
 
-func (e *Encoder) run(probeResult VideoFile, args []string) (string, error) {
+func (e *Encoder) run(probeResult VideoFile, args []string) (string, string, error) {
 	cmd := exec.Command(e.Path, args...)
 
 	stderr, err := cmd.StderrPipe()
@@ -96,7 +96,7 @@ func (e *Encoder) run(probeResult VideoFile, args []string) (string, error) {
 	}
 
 	if err = cmd.Start(); err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	buf := make([]byte, 80)
@@ -132,8 +132,8 @@ func (e *Encoder) run(probeResult VideoFile, args []string) (string, error) {
 	if err != nil {
 		// error message should be in the stderr stream
 		logger.Errorf("ffmpeg error when running command <%s>: %s", strings.Join(cmd.Args, " "), errBuilder.String())
-		return stdoutString, err
+		return stdoutString, errBuilder.String(), err
 	}
 
-	return stdoutString, nil
+	return stdoutString, "", nil
 }

@@ -78,7 +78,7 @@ func (e *Encoder) ScenePreviewVideoChunk(probeResult VideoFile, options ScenePre
 
 	finalArgs := append(args, args2...)
 
-	_, err := e.run(probeResult, finalArgs)
+	_, _, err := e.run(probeResult, finalArgs)
 	return err
 }
 
@@ -91,7 +91,7 @@ func (e *Encoder) ScenePreviewVideoChunkCombine(probeResult VideoFile, concatFil
 		"-c", "copy",
 		outputPath,
 	}
-	_, err := e.run(probeResult, args)
+	_, _, err := e.run(probeResult, args)
 	return err
 }
 
@@ -111,6 +111,6 @@ func (e *Encoder) ScenePreviewVideoToImage(probeResult VideoFile, width int, vid
 		"-an",
 		outputPath,
 	}
-	_, err := e.run(probeResult, args)
+	_, _, err := e.run(probeResult, args)
 	return err
 }

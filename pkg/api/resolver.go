@@ -33,6 +33,9 @@ func (r *Resolver) Image() models.ImageResolver {
 func (r *Resolver) SceneMarker() models.SceneMarkerResolver {
 	return &sceneMarkerResolver{r}
 }
+func (r *Resolver) SceneError() models.SceneErrorResolver {
+	return &sceneErrorResolver{r}
+}
 func (r *Resolver) Studio() models.StudioResolver {
 	return &studioResolver{r}
 }
@@ -71,6 +74,7 @@ type performerResolver struct{ *Resolver }
 type sceneResolver struct{ *Resolver }
 type sceneMarkerResolver struct{ *Resolver }
 type imageResolver struct{ *Resolver }
+type sceneErrorResolver struct{ *Resolver }
 type studioResolver struct{ *Resolver }
 type movieResolver struct{ *Resolver }
 type tagResolver struct{ *Resolver }

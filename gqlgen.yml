@@ -26,6 +26,8 @@ models:
     model: github.com/stashapp/stash/pkg/models.Scene
   SceneMarker:
     model: github.com/stashapp/stash/pkg/models.SceneMarker
+  SceneError:
+    model: github.com/stashapp/stash/pkg/models.SceneError
   ScrapedItem:
     model: github.com/stashapp/stash/pkg/models.ScrapedItem
   Studio:

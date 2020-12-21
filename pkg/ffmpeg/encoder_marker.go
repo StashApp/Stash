@@ -34,7 +34,7 @@ func (e *Encoder) SceneMarkerVideo(probeResult VideoFile, options SceneMarkerOpt
 		"-strict", "-2",
 		options.OutputPath,
 	}
-	_, err := e.run(probeResult, args)
+	_, _, err := e.run(probeResult, args)
 	return err
 }
 
@@ -55,6 +55,6 @@ func (e *Encoder) SceneMarkerImage(probeResult VideoFile, options SceneMarkerOpt
 		"-an",
 		options.OutputPath,
 	}
-	_, err := e.run(probeResult, args)
+	_, _, err := e.run(probeResult, args)
 	return err
 }

@@ -179,6 +179,9 @@ func (s *singleton) Scan(input models.ScanMetadataInput) {
 			logger.Infof("Starting scan of %d files. %d New files found", *total, *newFiles)
 		}
 
+		eqb := models.NewSceneErrorQueryBuilder()
+		eqb.ClearRecurringErrors("scan")
+
 		start := time.Now()
 		parallelTasks := config.GetParallelTasksWithAutoDetection()
 		logger.Infof("Scan started with %d parallel tasks", parallelTasks)
