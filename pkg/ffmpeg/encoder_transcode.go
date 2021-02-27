@@ -49,6 +49,48 @@ func calculateTranscodeScale(probeResult VideoFile, maxTranscodeSize models.Stre
 	return strconv.Itoa(maxSize) + ":-2"
 }
 
+func calculateHWTranscodeScale(probeResult VideoFile, maxTranscodeSize models.StreamingResolutionEnum) (*int, *int) {
+	maxSize := 0
+	switch maxTranscodeSize {
+	case models.StreamingResolutionEnumLow:
+		maxSize = 240
+	case models.StreamingResolutionEnumStandard:
+		maxSize = 480
+	case models.StreamingResolutionEnumStandardHd:
+		maxSize = 720
+	case models.StreamingResolutionEnumFullHd:
+		maxSize = 1080
+	case models.StreamingResolutionEnumFourK:
+		maxSize = 2160
+	}
+
+	// get the smaller dimension of the video file
+	videoSize := probeResult.Height
+	if probeResult.Width < videoSize {
+		videoSize = probeResult.Width
+	}
+
+	// if our streaming resolution is larger than the video dimension
+	// or we are streaming the original resolution, then just set the
+	// input width
+	if maxSize >= videoSize || maxSize == 0 {
+		return nil, nil
+	}
+
+	// we're setting either the width or height
+	// we'll set the smaller dimesion
+	if probeResult.Width > probeResult.Height {
+		height := maxSize
+
+		width := int(float64(probeResult.Width) / (float64(probeResult.Height) / float64(height)))
+		return &width, &height
+	}
+
+	width := maxSize
+	height := int(float64(probeResult.Height) / (float64(probeResult.Width) / float64(width)))
+	return &width, &height
+}
+
 func (e *Encoder) Transcode(probeResult VideoFile, options TranscodeOptions) {
 	scale := calculateTranscodeScale(probeResult, options.MaxTranscodeSize)
 	args := []string{

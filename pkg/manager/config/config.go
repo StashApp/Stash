@@ -55,6 +55,7 @@ const VideoFileNamingAlgorithm = "video_file_naming_algorithm"
 
 const PreviewPreset = "preview_preset"
 
+const TranscodeHardwareAcceleration = "transcode_hardware_acceleration"
 const MaxTranscodeSize = "max_transcode_size"
 const MaxStreamingTranscodeSize = "max_streaming_transcode_size"
 
@@ -358,6 +359,10 @@ func GetPreviewPreset() models.PreviewPreset {
 	}
 
 	return models.PreviewPreset(ret)
+}
+
+func GetTranscodeHardwareAcceleration() bool {
+	return viper.GetBool(TranscodeHardwareAcceleration)
 }
 
 func GetMaxTranscodeSize() models.StreamingResolutionEnum {
