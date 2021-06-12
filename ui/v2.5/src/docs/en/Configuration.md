@@ -4,6 +4,8 @@
 
 This section allows you to add and remove directories from your library list. Files in these directories will be included when scanning. Files that are outside of these directories will be removed when running the Clean task.
 
+**If you need to move or rename a folder**, you can remove the existing directory from your library and readd the new location. Stash will recognize the files and re-link to the new location. You do not need to do a Clean in between these steps.
+
 > **⚠️ Note:** Don't forget to click `Save` after updating these directories!
 
 ## Excluded Patterns

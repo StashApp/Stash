@@ -7,13 +7,18 @@ export const SettingsToolsPanel: React.FC = () => {
     <>
       <h4>Scene Tools</h4>
 
-      <Form.Group>
-        <Link to="/sceneFilenameParser">Scene Filename Parser</Link>
-      </Form.Group>
-
-      <Form.Group>
-        <Link to="/sceneDuplicateChecker">Scene Duplicate Checker</Link>
-      </Form.Group>
+      <Button
+        variant="secondary"
+        type="submit"
+      >
+        <a href-"/sceneFilenameParser">Scene Filename Parser</a>
+      </Button>
+      <Button
+        variant="secondary"
+        type="submit"
+      >
+        <a href-"/sceneDuplicateChecker">Scene Duplicate Checker</a>
+      </Button>
     </>
   );
 };
