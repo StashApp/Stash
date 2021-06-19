@@ -67,7 +67,7 @@ input PerformerFilterType {
   """Filter to only include performers missing this property"""
   is_missing: String
   """Filter to only include performers with these tags"""
-  tags: MultiCriterionInput
+  tags: HierarchicalMultiCriterionInput
   """Filter by tag count"""
   tag_count: IntCriterionInput
   """Filter by scene count"""
@@ -138,11 +138,11 @@ input SceneFilterType {
   """Filter to only include scenes with this movie"""
   movies: MultiCriterionInput
   """Filter to only include scenes with these tags"""
-  tags: MultiCriterionInput
+  tags: HierarchicalMultiCriterionInput
   """Filter by tag count"""
   tag_count: IntCriterionInput
   """Filter to only include scenes with performers with these tags"""
-  performer_tags: MultiCriterionInput
+  performer_tags: HierarchicalMultiCriterionInput
   """Filter to only include scenes with these performers"""
   performers: MultiCriterionInput
   """Filter by performer count"""
@@ -219,11 +219,11 @@ input GalleryFilterType {
   """Filter to only include galleries with this studio"""
   studios: HierarchicalMultiCriterionInput
   """Filter to only include galleries with these tags"""
-  tags: MultiCriterionInput
+  tags: HierarchicalMultiCriterionInput
   """Filter by tag count"""
   tag_count: IntCriterionInput
   """Filter to only include galleries with performers with these tags"""
-  performer_tags: MultiCriterionInput
+  performer_tags: HierarchicalMultiCriterionInput
   """Filter to only include galleries with these performers"""
   performers: MultiCriterionInput
   """Filter by performer count"""
@@ -288,11 +288,11 @@ input ImageFilterType {
   """Filter to only include images with this studio"""
   studios: HierarchicalMultiCriterionInput
   """Filter to only include images with these tags"""
-  tags: MultiCriterionInput
+  tags: HierarchicalMultiCriterionInput
   """Filter by tag count"""
   tag_count: IntCriterionInput
   """Filter to only include images with performers with these tags"""
-  performer_tags: MultiCriterionInput
+  performer_tags: HierarchicalMultiCriterionInput
   """Filter to only include images with these performers"""
   performers: MultiCriterionInput
   """Filter by performer count"""

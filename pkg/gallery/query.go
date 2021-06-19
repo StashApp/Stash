@@ -31,9 +31,10 @@ func CountByStudioID(r models.GalleryReader, id int) (int, error) {
 
 func CountByTagID(r models.GalleryReader, id int) (int, error) {
 	filter := &models.GalleryFilterType{
-		Tags: &models.MultiCriterionInput{
+		Tags: &models.HierarchicalMultiCriterionInput{
 			Value:    []string{strconv.Itoa(id)},
 			Modifier: models.CriterionModifierIncludes,
+			Depth:    0,
 		},
 	}
 

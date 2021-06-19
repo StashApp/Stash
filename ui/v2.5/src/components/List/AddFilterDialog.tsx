@@ -156,9 +156,6 @@ export const AddFilterDialog: React.FC<IAddFilterProps> = ({
           criterion.criterionOption.type !== "performers" &&
           criterion.criterionOption.type !== "studios" &&
           criterion.criterionOption.type !== "parent_studios" &&
-          criterion.criterionOption.type !== "tags" &&
-          criterion.criterionOption.type !== "sceneTags" &&
-          criterion.criterionOption.type !== "performerTags" &&
           criterion.criterionOption.type !== "movies"
         )
           return;
@@ -180,7 +177,13 @@ export const AddFilterDialog: React.FC<IAddFilterProps> = ({
         );
       }
       if (criterion instanceof IHierarchicalLabeledIdCriterion) {
-        if (criterion.criterionOption.type !== "studios") return;
+        if (
+          criterion.criterionOption.type !== "studios" &&
+          criterion.criterionOption.type !== "tags" &&
+          criterion.criterionOption.type !== "sceneTags" &&
+          criterion.criterionOption.type !== "performerTags"
+        )
+          return;
 
         return (
           <FilterSelect
@@ -241,7 +244,7 @@ export const AddFilterDialog: React.FC<IAddFilterProps> = ({
             <Form.Group>
               <Form.Check
                 checked={criterion.value.depth !== 0}
-                label={intl.formatMessage({ id: "include_child_studios" })}
+                label={intl.formatMessage({ id: "include_children" })}
                 onChange={() => {
                   const newCriterion = _.cloneDeep(criterion);
                   newCriterion.value.depth =

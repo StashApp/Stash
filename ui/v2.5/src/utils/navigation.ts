@@ -143,7 +143,10 @@ const makeTagScenesUrl = (tag: Partial<GQL.TagDataFragment>) => {
   if (!tag.id) return "#";
   const filter = new ListFilterModel(GQL.FilterMode.Scenes);
   const criterion = new TagsCriterion(TagsCriterionOption);
-  criterion.value = [{ id: tag.id, label: tag.name || `Tag ${tag.id}` }];
+  criterion.value = {
+    items: [{ id: tag.id, label: tag.name || `Tag ${tag.id}` }],
+    depth: 0,
+  };
   filter.criteria.push(criterion);
   return `/scenes?${filter.makeQueryParameters()}`;
 };
@@ -152,7 +155,10 @@ const makeTagPerformersUrl = (tag: Partial<GQL.TagDataFragment>) => {
   if (!tag.id) return "#";
   const filter = new ListFilterModel(GQL.FilterMode.Performers);
   const criterion = new TagsCriterion(TagsCriterionOption);
-  criterion.value = [{ id: tag.id, label: tag.name || `Tag ${tag.id}` }];
+  criterion.value = {
+    items: [{ id: tag.id, label: tag.name || `Tag ${tag.id}` }],
+    depth: 0,
+  };
   filter.criteria.push(criterion);
   return `/performers?${filter.makeQueryParameters()}`;
 };
@@ -161,7 +167,10 @@ const makeTagSceneMarkersUrl = (tag: Partial<GQL.TagDataFragment>) => {
   if (!tag.id) return "#";
   const filter = new ListFilterModel(GQL.FilterMode.SceneMarkers);
   const criterion = new TagsCriterion(TagsCriterionOption);
-  criterion.value = [{ id: tag.id, label: tag.name || `Tag ${tag.id}` }];
+  criterion.value = {
+    items: [{ id: tag.id, label: tag.name || `Tag ${tag.id}` }],
+    depth: 0,
+  };
   filter.criteria.push(criterion);
   return `/scenes/markers?${filter.makeQueryParameters()}`;
 };
@@ -170,7 +179,10 @@ const makeTagGalleriesUrl = (tag: Partial<GQL.TagDataFragment>) => {
   if (!tag.id) return "#";
   const filter = new ListFilterModel(GQL.FilterMode.Galleries);
   const criterion = new TagsCriterion(TagsCriterionOption);
-  criterion.value = [{ id: tag.id, label: tag.name || `Tag ${tag.id}` }];
+  criterion.value = {
+    items: [{ id: tag.id, label: tag.name || `Tag ${tag.id}` }],
+    depth: 0,
+  };
   filter.criteria.push(criterion);
   return `/galleries?${filter.makeQueryParameters()}`;
 };
@@ -179,7 +191,10 @@ const makeTagImagesUrl = (tag: Partial<GQL.TagDataFragment>) => {
   if (!tag.id) return "#";
   const filter = new ListFilterModel(GQL.FilterMode.Images);
   const criterion = new TagsCriterion(TagsCriterionOption);
-  criterion.value = [{ id: tag.id, label: tag.name || `Tag ${tag.id}` }];
+  criterion.value = {
+    items: [{ id: tag.id, label: tag.name || `Tag ${tag.id}` }],
+    depth: 0,
+  };
   filter.criteria.push(criterion);
   return `/images?${filter.makeQueryParameters()}`;
 };

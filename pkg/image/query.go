@@ -31,9 +31,10 @@ func CountByStudioID(r models.ImageReader, id int) (int, error) {
 
 func CountByTagID(r models.ImageReader, id int) (int, error) {
 	filter := &models.ImageFilterType{
-		Tags: &models.MultiCriterionInput{
+		Tags: &models.HierarchicalMultiCriterionInput{
 			Value:    []string{strconv.Itoa(id)},
 			Modifier: models.CriterionModifierIncludes,
+			Depth:    0,
 		},
 	}
 

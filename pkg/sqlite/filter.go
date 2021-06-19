@@ -583,6 +583,17 @@ UNION {recursiveSelect} {depthCondition}
 	f.addWith(withClause, args...)
 }
 
+func addHierarchicalConditionClauses(f *filterBuilder, criterion *models.HierarchicalMultiCriterionInput, table, idColumn string) {
+	if criterion.Modifier == models.CriterionModifierIncludes {
+		f.addWhere(fmt.Sprintf("%s.%s IS NOT NULL", table, idColumn))
+	} else if criterion.Modifier == models.CriterionModifierIncludesAll {
+		f.addWhere(fmt.Sprintf("%s.%s IS NOT NULL", table, idColumn))
+		f.addHaving(fmt.Sprintf("count(distinct %s.%s) IS %d", table, idColumn, len(criterion.Value)))
+	} else if criterion.Modifier == models.CriterionModifierExcludes {
+		f.addWhere(fmt.Sprintf("%s.%s IS NULL", table, idColumn))
+	}
+}
+
 func (m *hierarchicalMultiCriterionHandlerBuilder) handler(criterion *models.HierarchicalMultiCriterionInput) criterionHandlerFunc {
 	return func(f *filterBuilder) {
 		if criterion != nil && len(criterion.Value) > 0 {
@@ -590,14 +601,7 @@ func (m *hierarchicalMultiCriterionHandlerBuilder) handler(criterion *models.Hie
 
 			f.addJoin(m.derivedTable, "", fmt.Sprintf("%s.child_id = %s.%s", m.derivedTable, m.primaryTable, m.foreignFK))
 
-			if criterion.Modifier == models.CriterionModifierIncludes {
-				f.addWhere(fmt.Sprintf("%s.id IS NOT NULL", m.derivedTable))
-			} else if criterion.Modifier == models.CriterionModifierIncludesAll {
-				f.addWhere(fmt.Sprintf("%s.id IS NOT NULL", m.derivedTable))
-				f.addHaving(fmt.Sprintf("count(distinct %s.id) IS %d", m.derivedTable, len(criterion.Value)))
-			} else if criterion.Modifier == models.CriterionModifierExcludes {
-				f.addWhere(fmt.Sprintf("%s.id IS NULL", m.derivedTable))
-			}
+			addHierarchicalConditionClauses(f, criterion, m.derivedTable, "id")
 		}
 	}
 }
@@ -635,14 +639,7 @@ func (m *joinedHierarchicalMultiCriterionHandlerBuilder) handler(criterion *mode
 
 			f.addJoin(joinAlias, "", fmt.Sprintf("%s.%s = %s.id", joinAlias, m.primaryFK, m.primaryTable))
 
-			if criterion.Modifier == models.CriterionModifierIncludes {
-				f.addWhere(fmt.Sprintf("%s.parent_id IS NOT NULL", joinAlias))
-			} else if criterion.Modifier == models.CriterionModifierIncludesAll {
-				f.addWhere(fmt.Sprintf("%s.parent_id IS NOT NULL", joinAlias))
-				f.addHaving(fmt.Sprintf("count(distinct %s.parent_id) IS %d", joinAlias, len(criterion.Value)))
-			} else if criterion.Modifier == models.CriterionModifierExcludes {
-				f.addWhere(fmt.Sprintf("%s.parent_id IS NULL", joinAlias))
-			}
+			addHierarchicalConditionClauses(f, criterion, joinAlias, "parent_id")
 		}
 	}
 }

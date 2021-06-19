@@ -402,17 +402,17 @@ func performerAgeFilterCriterionHandler(age *models.IntCriterionInput) criterion
 	}
 }
 
-func performerTagsCriterionHandler(qb *performerQueryBuilder, tags *models.MultiCriterionInput) criterionHandlerFunc {
-	h := joinedMultiCriterionHandlerBuilder{
+func performerTagsCriterionHandler(qb *performerQueryBuilder, tags *models.HierarchicalMultiCriterionInput) criterionHandlerFunc {
+	h := joinedHierarchicalMultiCriterionHandlerBuilder{
 		primaryTable: performerTable,
-		joinTable:    performersTagsTable,
-		joinAs:       "tags_join",
-		primaryFK:    performerIDColumn,
-		foreignFK:    tagIDColumn,
+		foreignTable: tagTable,
+		foreignFK:    "tag_id",
+		derivedTable: "tag",
 
-		addJoinTable: func(f *filterBuilder) {
-			qb.tagsRepository().join(f, "tags_join", "performers.id")
-		},
+		relationsTable: "tags_relations",
+		joinAs:         "image_tag",
+		joinTable:      performersTagsTable,
+		primaryFK:      performerIDColumn,
 	}
 
 	return h.handler(tags)
