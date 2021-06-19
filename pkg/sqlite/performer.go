@@ -493,7 +493,7 @@ func performerStudiosCriterionHandler(studios *models.HierarchicalMultiCriterion
 
 			const derivedStudioTable = "studio"
 			const derivedPerformerStudioTable = "performer_studio"
-			addHierarchicalWithClause(f, studios.Value, derivedStudioTable, studioTable, "parent_id", studios.Depth)
+			addHierarchicalWithClause(f, studios.Value, derivedStudioTable, studioTable, "", "parent_id", studios.Depth)
 
 			templStr := `SELECT performer_id FROM {primaryTable}
 	INNER JOIN {joinTable} ON {primaryTable}.id = {joinTable}.{primaryFK}
