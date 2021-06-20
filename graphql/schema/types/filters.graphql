@@ -93,12 +93,10 @@ input PerformerFilterType {
 }
 
 input SceneMarkerFilterType {
-  """Filter to only include scene markers with this tag"""
-  tag_id: ID
   """Filter to only include scene markers with these tags"""
-  tags: MultiCriterionInput
+  tags: HierarchicalMultiCriterionInput
   """Filter to only include scene markers attached to a scene with these tags"""
-  scene_tags: MultiCriterionInput
+  scene_tags: HierarchicalMultiCriterionInput
   """Filter to only include scene markers with these performers"""
   performers: MultiCriterionInput
 }
