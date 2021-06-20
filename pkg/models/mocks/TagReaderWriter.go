@@ -130,6 +130,29 @@ func (_m *TagReaderWriter) Find(id int) (*models.Tag, error) {
 	return r0, r1
 }
 
+// FindByChildTagID provides a mock function with given fields: childID
+func (_m *TagReaderWriter) FindByChildTagID(childID int) ([]*models.Tag, error) {
+	ret := _m.Called(childID)
+
+	var r0 []*models.Tag
+	if rf, ok := ret.Get(0).(func(int) []*models.Tag); ok {
+		r0 = rf(childID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Tag)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(childID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindByGalleryID provides a mock function with given fields: galleryID
 func (_m *TagReaderWriter) FindByGalleryID(galleryID int) ([]*models.Tag, error) {
 	ret := _m.Called(galleryID)
@@ -215,6 +238,29 @@ func (_m *TagReaderWriter) FindByNames(names []string, nocase bool) ([]*models.T
 	var r1 error
 	if rf, ok := ret.Get(1).(func([]string, bool) error); ok {
 		r1 = rf(names, nocase)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindByParentTagID provides a mock function with given fields: parentID
+func (_m *TagReaderWriter) FindByParentTagID(parentID int) ([]*models.Tag, error) {
+	ret := _m.Called(parentID)
+
+	var r0 []*models.Tag
+	if rf, ok := ret.Get(0).(func(int) []*models.Tag); ok {
+		r0 = rf(parentID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Tag)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(parentID)
 	} else {
 		r1 = ret.Error(1)
 	}

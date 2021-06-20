@@ -10,6 +10,8 @@ type TagReader interface {
 	FindByGalleryID(galleryID int) ([]*Tag, error)
 	FindByName(name string, nocase bool) (*Tag, error)
 	FindByNames(names []string, nocase bool) ([]*Tag, error)
+	FindByParentTagID(parentID int) ([]*Tag, error)
+	FindByChildTagID(childID int) ([]*Tag, error)
 	Count() (int, error)
 	All() ([]*Tag, error)
 	// TODO - this interface is temporary until the filter schema can fully

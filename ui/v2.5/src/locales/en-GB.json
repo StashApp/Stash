@@ -92,6 +92,7 @@
   "bitrate": "Bit Rate",
   "career_length": "Career Length",
   "child_studios": "Child Studios",
+  "child_tags": "Child Tags",
   "component_tagger": {
     "config": {
       "active_instance": "Active stash-box instance:",
@@ -539,6 +540,7 @@
     "previous": "Previous"
   },
   "parent_studios": "Parent Studios",
+  "parent_tags": "Parent Tags",
   "path": "Path",
   "performer": "Performer",
   "performer_count": "Performer Count",

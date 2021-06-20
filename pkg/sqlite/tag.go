@@ -196,6 +196,28 @@ func (qb *tagQueryBuilder) FindByNames(names []string, nocase bool) ([]*models.T
 	return qb.queryTags(query, args)
 }
 
+func (qb *tagQueryBuilder) FindByParentTagID(parentID int) ([]*models.Tag, error) {
+	query := `
+		SELECT tags.* FROM tags
+		INNER JOIN tags_relations ON tags_relations.child_id = tags.id
+		WHERE tags_relations.parent_id = ?
+	`
+	query += qb.getDefaultTagSort()
+	args := []interface{}{parentID}
+	return qb.queryTags(query, args)
+}
+
+func (qb *tagQueryBuilder) FindByChildTagID(parentID int) ([]*models.Tag, error) {
+	query := `
+		SELECT tags.* FROM tags
+		INNER JOIN tags_relations ON tags_relations.parent_id = tags.id
+		WHERE tags_relations.child_id = ?
+	`
+	query += qb.getDefaultTagSort()
+	args := []interface{}{parentID}
+	return qb.queryTags(query, args)
+}
+
 func (qb *tagQueryBuilder) Count() (int, error) {
 	return qb.runCountQuery(qb.buildCountQuery("SELECT tags.id FROM tags"), nil)
 }

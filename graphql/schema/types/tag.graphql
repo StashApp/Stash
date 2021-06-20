@@ -11,6 +11,9 @@ type Tag {
   image_count: Int # Resolver
   gallery_count: Int # Resolver
   performer_count: Int
+
+  parents: [Tag!]!
+  children: [Tag!]!
 }
 
 input TagCreateInput {
