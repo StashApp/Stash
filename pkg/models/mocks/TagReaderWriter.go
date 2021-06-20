@@ -510,6 +510,20 @@ func (_m *TagReaderWriter) UpdateAliases(tagID int, aliases []string) error {
 	return r0
 }
 
+// UpdateChildTags provides a mock function with given fields: tagID, parentIDs
+func (_m *TagReaderWriter) UpdateChildTags(tagID int, parentIDs []int) error {
+	ret := _m.Called(tagID, parentIDs)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(int, []int) error); ok {
+		r0 = rf(tagID, parentIDs)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateFull provides a mock function with given fields: updatedTag
 func (_m *TagReaderWriter) UpdateFull(updatedTag models.Tag) (*models.Tag, error) {
 	ret := _m.Called(updatedTag)
@@ -540,6 +554,20 @@ func (_m *TagReaderWriter) UpdateImage(tagID int, image []byte) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(int, []byte) error); ok {
 		r0 = rf(tagID, image)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateParentTags provides a mock function with given fields: tagID, parentIDs
+func (_m *TagReaderWriter) UpdateParentTags(tagID int, parentIDs []int) error {
+	ret := _m.Called(tagID, parentIDs)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(int, []int) error); ok {
+		r0 = rf(tagID, parentIDs)
 	} else {
 		r0 = ret.Error(0)
 	}

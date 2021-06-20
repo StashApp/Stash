@@ -75,6 +75,28 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input models.TagCreate
 			}
 		}
 
+		if input.ParentIds != nil && len(input.ParentIds) > 0 {
+			ids, err := utils.StringSliceToIntSlice(input.ParentIds)
+			if err != nil {
+				return err
+			}
+
+			if err := qb.UpdateParentTags(t.ID, ids); err != nil {
+				return err
+			}
+		}
+
+		if input.ChildIds != nil && len(input.ChildIds) > 0 {
+			ids, err := utils.StringSliceToIntSlice(input.ChildIds)
+			if err != nil {
+				return err
+			}
+
+			if err := qb.UpdateChildTags(t.ID, ids); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}); err != nil {
 		return nil, err
@@ -157,6 +179,28 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input models.TagUpdate
 			}
 
 			if err := qb.UpdateAliases(tagID, input.Aliases); err != nil {
+				return err
+			}
+		}
+
+		if translator.hasField("parent_ids") {
+			ids, err := utils.StringSliceToIntSlice(input.ParentIds)
+			if err != nil {
+				return err
+			}
+
+			if err := qb.UpdateParentTags(t.ID, ids); err != nil {
+				return err
+			}
+		}
+
+		if translator.hasField("child_ids") {
+			ids, err := utils.StringSliceToIntSlice(input.ChildIds)
+			if err != nil {
+				return err
+			}
+
+			if err := qb.UpdateChildTags(t.ID, ids); err != nil {
 				return err
 			}
 		}

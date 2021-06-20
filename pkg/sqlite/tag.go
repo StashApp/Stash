@@ -619,3 +619,49 @@ AND NOT EXISTS(SELECT 1 FROM `+table+` o WHERE o.`+idColumn+` = `+table+`.`+idCo
 
 	return nil
 }
+
+func (qb *tagQueryBuilder) UpdateParentTags(tagID int, parentIDs []int) error {
+	tx := qb.tx
+	if _, err := tx.Exec("DELETE FROM tags_relations WHERE child_id = ?", tagID); err != nil {
+		return err
+	}
+
+	if len(parentIDs) > 0 {
+		var args []interface{}
+		var values []string
+		for _, parentID := range parentIDs {
+			values = append(values, "(? , ?)")
+			args = append(args, parentID, tagID)
+		}
+
+		query := "INSERT INTO tags_relations (parent_id, child_id) VALUES " + strings.Join(values, ", ")
+		if _, err := tx.Exec(query, args...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (qb *tagQueryBuilder) UpdateChildTags(tagID int, childIDs []int) error {
+	tx := qb.tx
+	if _, err := tx.Exec("DELETE FROM tags_relations WHERE parent_id = ?", tagID); err != nil {
+		return err
+	}
+
+	if len(childIDs) > 0 {
+		var args []interface{}
+		var values []string
+		for _, childID := range childIDs {
+			values = append(values, "(? , ?)")
+			args = append(args, tagID, childID)
+		}
+
+		query := "INSERT INTO tags_relations (parent_id, child_id) VALUES " + strings.Join(values, ", ")
+		if _, err := tx.Exec(query, args...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

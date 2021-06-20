@@ -2,9 +2,9 @@ import React, { useEffect } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as GQL from "src/core/generated-graphql";
 import * as yup from "yup";
-import { DetailsEditNavbar } from "src/components/Shared";
+import { DetailsEditNavbar, TagSelect } from "src/components/Shared";
 import { Form, Col, Row } from "react-bootstrap";
-import { ImageUtils } from "src/utils";
+import { FormUtils, ImageUtils } from "src/utils";
 import { useFormik } from "formik";
 import { Prompt, useHistory } from "react-router-dom";
 import Mousetrap from "mousetrap";
@@ -51,11 +51,15 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
         },
         message: "aliases must be unique",
       }),
+    parent_ids: yup.array(yup.string().required()).optional().nullable(),
+    child_ids: yup.array(yup.string().required()).optional().nullable(),
   });
 
   const initialValues = {
     name: tag?.name,
     aliases: tag?.aliases,
+    parent_ids: (tag?.parents ?? []).map((t) => t.id),
+    child_ids: (tag?.children ?? []).map((t) => t.id),
   };
 
   type InputValues = typeof initialValues;
@@ -150,6 +154,60 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
               value={formik.values.aliases ?? []}
               setValue={(value) => formik.setFieldValue("aliases", value)}
               errors={formik.errors.aliases}
+            />
+          </Col>
+        </Form.Group>
+
+        <Form.Group controlId="parent_tags" as={Row}>
+          {FormUtils.renderLabel({
+            title: intl.formatMessage({ id: "parent_tags" }),
+            labelProps: {
+              column: true,
+              sm: 3,
+              xl: 12,
+            },
+          })}
+          <Col sm={9} xl={12}>
+            <TagSelect
+              isMulti
+              onSelect={(items) =>
+                formik.setFieldValue(
+                  "parent_ids",
+                  items.map((item) => item.id)
+                )
+              }
+              ids={formik.values.parent_ids}
+              excludeIds={(tag?.id ? [tag.id] : []).concat(
+                ...formik.values.child_ids
+              )}
+              creatable={false}
+            />
+          </Col>
+        </Form.Group>
+
+        <Form.Group controlId="child_tags" as={Row}>
+          {FormUtils.renderLabel({
+            title: intl.formatMessage({ id: "child_tags" }),
+            labelProps: {
+              column: true,
+              sm: 3,
+              xl: 12,
+            },
+          })}
+          <Col sm={9} xl={12}>
+            <TagSelect
+              isMulti
+              onSelect={(items) =>
+                formik.setFieldValue(
+                  "child_ids",
+                  items.map((item) => item.id)
+                )
+              }
+              ids={formik.values.child_ids}
+              excludeIds={(tag?.id ? [tag.id] : []).concat(
+                ...formik.values.parent_ids
+              )}
+              creatable={false}
             />
           </Col>
         </Form.Group>
