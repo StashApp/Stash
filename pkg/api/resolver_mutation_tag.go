@@ -183,24 +183,37 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input models.TagUpdate
 			}
 		}
 
-		if translator.hasField("parent_ids") {
-			ids, err := utils.StringSliceToIntSlice(input.ParentIds)
-			if err != nil {
-				return err
-			}
+		var parentIDs []int
+		var childIDs []int
 
-			if err := qb.UpdateParentTags(t.ID, ids); err != nil {
+		if translator.hasField("parent_ids") {
+			parentIDs, err = utils.StringSliceToIntSlice(input.ParentIds)
+			if err != nil {
 				return err
 			}
 		}
 
 		if translator.hasField("child_ids") {
-			ids, err := utils.StringSliceToIntSlice(input.ChildIds)
+			childIDs, err = utils.StringSliceToIntSlice(input.ChildIds)
 			if err != nil {
 				return err
 			}
+		}
 
-			if err := qb.UpdateChildTags(t.ID, ids); err != nil {
+		if parentIDs != nil || childIDs != nil {
+			if err := tag.EnsureUniqueHierarchy(tagID, parentIDs, childIDs, qb); err != nil {
+				return err
+			}
+		}
+
+		if parentIDs != nil {
+			if err := qb.UpdateParentTags(tagID, parentIDs); err != nil {
+				return err
+			}
+		}
+
+		if childIDs != nil {
+			if err := qb.UpdateChildTags(tagID, childIDs); err != nil {
 				return err
 			}
 		}
