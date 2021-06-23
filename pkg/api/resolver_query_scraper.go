@@ -9,6 +9,7 @@ import (
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/scraper"
 	"github.com/stashapp/stash/pkg/scraper/stashbox"
+	"github.com/stashapp/stash/pkg/utils"
 )
 
 // deprecated
@@ -98,7 +99,11 @@ func (r *queryResolver) QueryStashBoxScene(ctx context.Context, input models.Sta
 	client := stashbox.NewClient(*boxes[input.StashBoxIndex], r.txnManager)
 
 	if len(input.SceneIds) > 0 {
-		return client.FindStashBoxScenesByFingerprints(input.SceneIds)
+		ids, err := utils.StringSliceToIntSlice(input.SceneIds)
+		if err != nil {
+			return nil, err
+		}
+		return client.FindStashBoxScenesByFingerprints(ids)
 	}
 
 	if input.Q != nil {

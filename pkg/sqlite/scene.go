@@ -894,3 +894,23 @@ func (qb *sceneQueryBuilder) FindDuplicates(distance int) ([][]*models.Scene, er
 
 	return duplicates, nil
 }
+
+func (qb *sceneQueryBuilder) FindByStashIDStatus(hasStashID bool, stashboxEndpoint string) ([]*models.Scene, error) {
+	query := selectAll("scenes") + `
+		LEFT JOIN scene_stash_ids on scene_stash_ids.scene_id = scenes.id
+	`
+
+	if hasStashID {
+		query += `
+			WHERE scene_stash_ids.stash_id IS NOT NULL
+			AND scene_stash_ids.endpoint = ?
+		`
+	} else {
+		query += `
+			WHERE scene_stash_ids.stash_id IS NULL
+		`
+	}
+
+	args := []interface{}{stashboxEndpoint}
+	return qb.queryScenes(query, args)
+}

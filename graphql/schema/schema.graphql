@@ -254,7 +254,9 @@ type Mutation {
   backupDatabase(input: BackupDatabaseInput!): String
 
   """Run batch performer tag task. Returns the job ID."""
-  stashBoxBatchPerformerTag(input: StashBoxBatchPerformerTagInput!): String!
+  stashBoxBatchPerformerTag(input: StashBoxBatchPerformerTagInput!): ID!
+  """Run batch scene tag task. Returns the job ID."""
+  stashBoxBatchSceneTag(input: StashBoxBatchSceneTagInput!): ID!
   
   """Enables DLNA for an optional duration. Has no effect if DLNA is enabled by default"""
   enableDLNA(input: EnableDLNAInput!): Boolean!

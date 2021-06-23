@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button, Card, Form, InputGroup } from "react-bootstrap";
+import { Button, Card, Form, InputGroup, ProgressBar } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { FormattedMessage, useIntl } from "react-intl";
 import { HashLink } from "react-router-hash-link";
 import { uniqBy } from "lodash";
+import distance from "hamming-distance";
+
 import { ScenePreview } from "src/components/Scenes/SceneCard";
 import { useLocalForage } from "src/hooks";
 
@@ -11,26 +13,34 @@ import * as GQL from "src/core/generated-graphql";
 import { LoadingIndicator, TruncatedText } from "src/components/Shared";
 import {
   stashBoxSceneQuery,
-  stashBoxSceneBatchQuery,
   useConfiguration,
+  useJobsSubscribe,
+  mutateStashBoxBatchSceneTag,
+  stashBoxSceneBatchQuery,
 } from "src/core/StashService";
 import { Manual } from "src/components/Help/Manual";
 
 import { SceneQueue } from "src/models/sceneQueue";
 import StashSearchResult from "./StashSearchResult";
 import Config from "./Config";
+import BatchModal from "./BatchModal";
 import {
   LOCAL_FORAGE_KEY,
   ITaggerConfig,
   ParseMode,
   initialConfig,
-} from "./constants";
+} from "../constants";
 import {
   parsePath,
   selectScenes,
   IStashBoxScene,
   sortScenesByDuration,
-} from "./utils";
+} from "../utils";
+
+type JobFragment = Pick<
+  GQL.Job,
+  "id" | "status" | "subTasks" | "description" | "progress"
+>;
 
 const months = [
   "jan",
@@ -146,9 +156,11 @@ interface ITaggerListProps {
   scenes: GQL.SlimSceneDataFragment[];
   queue?: SceneQueue;
   selectedEndpoint: { endpoint: string; index: number };
+  isIdle: boolean;
   config: ITaggerConfig;
   queueFingerprintSubmission: (sceneId: string, endpoint: string) => void;
   clearSubmissionQueue: (endpoint: string) => void;
+  onBatchUpdate: (ids: string[] | undefined, refresh: boolean) => void;
 }
 
 // Caches fingerprint lookups between page renders
@@ -158,9 +170,11 @@ const TaggerList: React.FC<ITaggerListProps> = ({
   scenes,
   queue,
   selectedEndpoint,
+  isIdle,
   config,
   queueFingerprintSubmission,
   clearSubmissionQueue,
+  onBatchUpdate,
 }) => {
   const intl = useIntl();
   const [fingerprintError, setFingerprintError] = useState("");
@@ -190,6 +204,25 @@ const TaggerList: React.FC<ITaggerListProps> = ({
   const [hideUnmatched, setHideUnmatched] = useState(false);
   const fingerprintQueue =
     config.fingerprintQueue[selectedEndpoint.endpoint] ?? [];
+
+  const [refresh, setRefresh] = useState(false);
+  const { data: allScenes } = GQL.useFindScenesQuery({
+    variables: {
+      scene_filter: {
+        stash_id: {
+          value: "",
+          modifier: refresh
+            ? GQL.CriterionModifier.NotNull
+            : GQL.CriterionModifier.IsNull,
+        },
+      },
+      filter: {
+        per_page: 0,
+      },
+    },
+  });
+  const [showBatchUpdate, setShowBatchUpdate] = useState(false);
+  const [queryAll, setQueryAll] = useState(false);
 
   useEffect(() => {
     inputForm?.current?.reset();
@@ -248,6 +281,11 @@ const TaggerList: React.FC<ITaggerListProps> = ({
     });
   };
 
+  const handleBatchUpdate = () => {
+    onBatchUpdate(!queryAll ? scenes.map((p) => p.id) : undefined, refresh);
+    setShowBatchUpdate(false);
+  };
+
   const handleTaggedScene = (scene: Partial<GQL.SlimSceneDataFragment>) => {
     setTaggedScenes({
       ...taggedScenes,
@@ -257,7 +295,6 @@ const TaggerList: React.FC<ITaggerListProps> = ({
 
   const handleFingerprintSearch = async () => {
     setLoadingFingerprints(true);
-    const newFingerprints = { ...fingerprints };
 
     const sceneIDs = scenes
       .filter((s) => s.stash_ids.length === 0)
@@ -276,19 +313,52 @@ const TaggerList: React.FC<ITaggerListProps> = ({
     // clear search errors
     setSearchErrors({});
 
-    selectScenes(results.data?.queryStashBoxScene).forEach((scene) => {
-      scene.fingerprints?.forEach((f) => {
-        newFingerprints[f.hash] = newFingerprints[f.hash]
-          ? [...newFingerprints[f.hash], scene]
-          : [scene];
-      });
-    });
+    const sceneResults = selectScenes(results.data.queryStashBoxScene);
+    const hashes = sceneResults.reduce(
+      (dict: Record<string, IStashBoxScene>, scene: IStashBoxScene) => ({
+        ...dict,
+        ...Object.fromEntries(
+          scene.fingerprints
+            .filter((f) => f.algorithm !== "PHASH")
+            .map((f) => [f.hash, scene])
+        ),
+      }),
+      {}
+    );
+    const phashes = sceneResults.reduce(
+      (dict: Record<string, IStashBoxScene>, scene: IStashBoxScene) => ({
+        ...dict,
+        ...Object.fromEntries(
+          scene.fingerprints
+            .filter((f) => f.algorithm === "PHASH")
+            .map((f) => [f.hash, scene])
+        ),
+      }),
+      {}
+    );
 
-    // Null any ids that are still undefined since it means they weren't found
-    sceneIDs.forEach((id) => {
-      newFingerprints[id] = newFingerprints[id] ?? null;
-    });
+    const sceneHashes = Object.fromEntries(
+      scenes.map((s) => [
+        s.id,
+        uniqBy(
+          [
+            ...(s.oshash && hashes[s.oshash] ? [hashes[s.oshash]] : []),
+            ...(s.checksum && hashes[s.checksum] ? [hashes[s.checksum]] : []),
+            ...(s.phash
+              ? Object.keys(phashes)
+                  .filter((fp) => distance(fp, s.phash) <= 8)
+                  .map((fp) => phashes[fp])
+              : []),
+          ],
+          (fpScene) => fpScene.stash_id
+        ),
+      ])
+    );
 
+    const newFingerprints = {
+      ...fingerprints,
+      ...sceneHashes,
+    };
     setFingerprints(newFingerprints);
     fingerprintCache = newFingerprints;
     setLoadingFingerprints(false);
@@ -300,15 +370,13 @@ const TaggerList: React.FC<ITaggerListProps> = ({
       (s) => s.stash_ids.length === 0 && fingerprints[s.id] === undefined
     );
 
-  const getFingerprintCount = () => {
-    return scenes.filter(
+  const getFingerprintCount = () =>
+    scenes.filter(
       (s) =>
         s.stash_ids.length === 0 &&
-        ((s.checksum && fingerprints[s.checksum]) ||
-          (s.oshash && fingerprints[s.oshash]) ||
-          (s.phash && fingerprints[s.phash]))
+        fingerprints[s.id] &&
+        fingerprints[s.id].length > 0
     ).length;
-  };
 
   const getFingerprintCountMessage = () => {
     const count = getFingerprintCount();
@@ -345,14 +413,7 @@ const TaggerList: React.FC<ITaggerListProps> = ({
       );
 
       // Get all scenes matching one of the fingerprints, and return array of unique scenes
-      const fingerprintMatches = uniqBy(
-        [
-          ...(fingerprints[scene.checksum ?? ""] ?? []),
-          ...(fingerprints[scene.oshash ?? ""] ?? []),
-          ...(fingerprints[scene.phash ?? ""] ?? []),
-        ].flat(),
-        (f) => f.stash_id
-      );
+      const fingerprintMatches = fingerprints[scene.id] ?? [];
 
       const isTagged = taggedScenes[scene.id];
       const hasStashIDs = scene.stash_ids.length > 0;
@@ -473,7 +534,7 @@ const TaggerList: React.FC<ITaggerListProps> = ({
             }
             setScene={handleTaggedScene}
             scene={match}
-            setCoverImage={config.setCoverImage}
+            excludedFields={config.excludedSceneFields}
             setTags={config.setTags}
             tagOperation={config.tagOperation}
             endpoint={selectedEndpoint.endpoint}
@@ -506,7 +567,7 @@ const TaggerList: React.FC<ITaggerListProps> = ({
                         [scene.id]: i,
                       })
                     }
-                    setCoverImage={config.setCoverImage}
+                    excludedFields={config.excludedSceneFields}
                     tagOperation={config.tagOperation}
                     setTags={config.setTags}
                     setScene={handleTaggedScene}
@@ -550,8 +611,23 @@ const TaggerList: React.FC<ITaggerListProps> = ({
       );
     });
 
+  const batchSceneCount = queryAll
+    ? allScenes?.findScenes.count ?? 0
+    : scenes.filter((p) =>
+        refresh ? p.stash_ids.length > 0 : p.stash_ids.length === 0
+      ).length;
+
   return (
     <Card className="tagger-table">
+      <BatchModal
+        show={showBatchUpdate}
+        hide={() => setShowBatchUpdate(false)}
+        handleBatchUpdate={handleBatchUpdate}
+        isIdle={isIdle}
+        sceneCount={batchSceneCount}
+        setQueryAll={setQueryAll}
+        setRefresh={setRefresh}
+      />
       <div className="tagger-table-header d-flex flex-nowrap align-items-center">
         <b className="ml-auto mr-2 text-danger">{fingerprintError}</b>
         <div className="mr-2">
@@ -601,6 +677,9 @@ const TaggerList: React.FC<ITaggerListProps> = ({
           {!canFingerprintSearch() && getFingerprintCountMessage()}
           {loadingFingerprints && <LoadingIndicator message="" inline small />}
         </Button>
+        <Button className="ml-3" onClick={() => setShowBatchUpdate(true)}>
+          Batch Update Scenes
+        </Button>
       </div>
       <form ref={inputForm}>{renderScenes()}</form>
     </Card>
@@ -613,6 +692,7 @@ interface ITaggerProps {
 }
 
 export const Tagger: React.FC<ITaggerProps> = ({ scenes, queue }) => {
+  const jobsSubscribe = useJobsSubscribe();
   const stashConfig = useConfiguration();
   const [{ data: config }, setConfig] = useLocalForage<ITaggerConfig>(
     LOCAL_FORAGE_KEY,
@@ -620,6 +700,26 @@ export const Tagger: React.FC<ITaggerProps> = ({ scenes, queue }) => {
   );
   const [showConfig, setShowConfig] = useState(false);
   const [showManual, setShowManual] = useState(false);
+
+  const [batchJob, setBatchJob] = useState<JobFragment | undefined>();
+
+  // monitor batch operation
+  useEffect(() => {
+    if (!jobsSubscribe.data) {
+      return;
+    }
+
+    const event = jobsSubscribe.data.jobsSubscribe;
+    if (event.job.description !== "Batch stash-box scene tag...") {
+      return;
+    }
+
+    if (event.type !== GQL.JobStatusUpdateType.Remove) {
+      setBatchJob(event.job);
+    } else {
+      setBatchJob(undefined);
+    }
+  }, [jobsSubscribe]);
 
   if (!config) return <LoadingIndicator />;
 
@@ -655,6 +755,49 @@ export const Tagger: React.FC<ITaggerProps> = ({ scenes, queue }) => {
     });
   };
 
+  async function batchUpdate(ids: string[] | undefined, refresh: boolean) {
+    if (config && selectedEndpoint) {
+      await mutateStashBoxBatchSceneTag({
+        scene_ids: ids,
+        endpoint: selectedEndpointIndex,
+        refresh,
+        set_organized: config.setOrganized ?? false,
+        tag_strategy: !config.setTags
+          ? GQL.TagStrategy.Ignore
+          : config.tagOperation === "overwrite"
+          ? GQL.TagStrategy.Overwrite
+          : GQL.TagStrategy.Merge,
+        create_tags: config.createTags ?? false,
+        exclude_fields: config.excludedSceneFields ?? [],
+        tag_male_performers: config.showMales ?? false,
+      });
+    }
+  }
+
+  function renderStatus() {
+    if (batchJob) {
+      const progress =
+        batchJob.progress !== undefined && batchJob.progress !== null
+          ? batchJob.progress * 100
+          : undefined;
+      return (
+        <Form.Group className="py-4 px-2">
+          <h5>Status: {batchJob.description}</h5>
+          {progress !== undefined && (
+            <ProgressBar
+              animated
+              now={progress}
+              label={`${progress.toFixed(0)}%`}
+            />
+          )}
+          {(batchJob.subTasks ?? []).length > 0 && (
+            <div>{batchJob.subTasks?.join(", ")}</div>
+          )}
+        </Form.Group>
+      );
+    }
+  }
+
   return (
     <>
       <Manual
@@ -663,10 +806,15 @@ export const Tagger: React.FC<ITaggerProps> = ({ scenes, queue }) => {
         defaultActiveTab="Tagger.md"
       />
       <div className="tagger-container mx-md-auto">
+        {renderStatus()}
         {selectedEndpointIndex !== -1 && selectedEndpoint ? (
           <>
             <div className="row mb-2 no-gutters">
-              <Button onClick={() => setShowConfig(!showConfig)} variant="link">
+              <Button
+                onClick={() => setShowConfig(!showConfig)}
+                variant="primary"
+                className="ml-2"
+              >
                 <FormattedMessage
                   id="component_tagger.verb_toggle_config"
                   values={{
@@ -698,8 +846,10 @@ export const Tagger: React.FC<ITaggerProps> = ({ scenes, queue }) => {
                 endpoint: selectedEndpoint.endpoint,
                 index: selectedEndpointIndex,
               }}
+              isIdle={!batchJob}
               queueFingerprintSubmission={queueFingerprintSubmission}
               clearSubmissionQueue={clearSubmissionQueue}
+              onBatchUpdate={batchUpdate}
             />
           </>
         ) : (

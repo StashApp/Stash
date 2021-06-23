@@ -790,7 +790,7 @@ func (s *singleton) StashBoxBatchPerformerTag(ctx context.Context, input models.
 
 		progress.SetTotal(len(tasks))
 
-		logger.Infof("Starting stash-box batch operation for %d performers", len(tasks))
+		logger.Infof("Starting Stash-Box batch operation for %d performers", len(tasks))
 
 		var wg sync.WaitGroup
 		for _, task := range tasks {
@@ -804,4 +804,110 @@ func (s *singleton) StashBoxBatchPerformerTag(ctx context.Context, input models.
 	})
 
 	return s.JobManager.Add(ctx, "Batch stash-box performer tag...", j)
+}
+
+func (s *singleton) StashBoxBatchSceneTag(ctx context.Context, input models.StashBoxBatchSceneTagInput) int {
+	j := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) {
+		logger.Infof("Initiating stash-box batch scene tag")
+
+		boxes := config.GetInstance().GetStashBoxes()
+		if input.Endpoint < 0 || input.Endpoint >= len(boxes) {
+			logger.Error(fmt.Errorf("invalid stash_box_index %d", input.Endpoint))
+			return
+		}
+		box := boxes[input.Endpoint]
+
+		var tasks []StashBoxSceneTagTask
+
+		phashDistance := 0
+		if input.PhashDistance != nil {
+			phashDistance = *input.PhashDistance
+		}
+
+		if len(input.SceneIds) > 0 {
+			if err := s.TxnManager.WithReadTxn(context.TODO(), func(r models.ReaderRepository) error {
+				sceneQuery := r.Scene()
+
+				for _, sceneID := range input.SceneIds {
+					if id, err := strconv.Atoi(sceneID); err == nil {
+						scene, err := sceneQuery.Find(id)
+						if err == nil {
+							tasks = append(tasks, StashBoxSceneTagTask{
+								txnManager:        s.TxnManager,
+								scene:             scene,
+								refresh:           input.Refresh,
+								box:               box,
+								excludedFields:    input.ExcludeFields,
+								phashDistance:     phashDistance,
+								tagStrategy:       input.TagStrategy,
+								createTags:        input.CreateTags,
+								setOrganized:      input.SetOrganized,
+								tagMalePerformers: input.TagMalePerformers,
+							})
+						} else {
+							return err
+						}
+					}
+				}
+				return nil
+			}); err != nil {
+				logger.Error(err.Error())
+			}
+		} else {
+			if err := s.TxnManager.WithReadTxn(context.TODO(), func(r models.ReaderRepository) error {
+				sceneQuery := r.Scene()
+				var scenes []*models.Scene
+				var err error
+				if input.Refresh {
+					scenes, err = sceneQuery.FindByStashIDStatus(true, box.Endpoint)
+				} else {
+					scenes, err = sceneQuery.FindByStashIDStatus(false, box.Endpoint)
+				}
+				if err != nil {
+					return fmt.Errorf("Error querying scenes: %s", err.Error())
+				}
+
+				for _, scene := range scenes {
+					tasks = append(tasks, StashBoxSceneTagTask{
+						txnManager:        s.TxnManager,
+						scene:             scene,
+						refresh:           input.Refresh,
+						box:               box,
+						excludedFields:    input.ExcludeFields,
+						phashDistance:     phashDistance,
+						tagStrategy:       input.TagStrategy,
+						createTags:        input.CreateTags,
+						setOrganized:      input.SetOrganized,
+						tagMalePerformers: input.TagMalePerformers,
+					})
+				}
+				return nil
+			}); err != nil {
+				logger.Error(err.Error())
+				return
+			}
+		}
+
+		if len(tasks) == 0 {
+			return
+		}
+
+		progress.SetTotal(len(tasks))
+
+		logger.Infof("Starting Stash-Box batch operation for %d scenes", len(tasks))
+
+		var wg sync.WaitGroup
+		for _, task := range tasks {
+			wg.Add(1)
+			progress.ExecuteTask(task.Description(), func() {
+				task.Start(&wg)
+			})
+
+			progress.Increment()
+		}
+
+		logger.Infof("Finished Stash-Box batch operation for %d scenes", len(tasks))
+	})
+
+	return s.JobManager.Add(ctx, "Batch stash-box scene tag...", j)
 }

@@ -185,53 +185,8 @@ func (t *StashBoxPerformerTagTask) stashBoxPerformerTag() {
 				return err
 			})
 		} else if t.name != nil {
-			currentTime := time.Now()
-			newPerformer := models.Performer{
-				Aliases:      getNullString(performer.Aliases),
-				Birthdate:    getDate(performer.Birthdate),
-				CareerLength: getNullString(performer.CareerLength),
-				Checksum:     utils.MD5FromString(performer.Name),
-				Country:      getNullString(performer.Country),
-				CreatedAt:    models.SQLiteTimestamp{Timestamp: currentTime},
-				Ethnicity:    getNullString(performer.Ethnicity),
-				EyeColor:     getNullString(performer.EyeColor),
-				FakeTits:     getNullString(performer.FakeTits),
-				Favorite:     sql.NullBool{Bool: false, Valid: true},
-				Gender:       getNullString(performer.Gender),
-				Height:       getNullString(performer.Height),
-				Instagram:    getNullString(performer.Instagram),
-				Measurements: getNullString(performer.Measurements),
-				Name:         sql.NullString{String: performer.Name, Valid: true},
-				Piercings:    getNullString(performer.Piercings),
-				Tattoos:      getNullString(performer.Tattoos),
-				Twitter:      getNullString(performer.Twitter),
-				URL:          getNullString(performer.URL),
-				UpdatedAt:    models.SQLiteTimestamp{Timestamp: currentTime},
-			}
 			err := t.txnManager.WithTxn(context.TODO(), func(r models.Repository) error {
-				createdPerformer, err := r.Performer().Create(newPerformer)
-				if err != nil {
-					return err
-				}
-
-				err = r.Performer().UpdateStashIDs(createdPerformer.ID, []models.StashID{
-					{
-						Endpoint: t.box.Endpoint,
-						StashID:  *performer.RemoteSiteID,
-					},
-				})
-				if err != nil {
-					return err
-				}
-
-				if len(performer.Images) > 0 {
-					image, err := utils.ReadImageFromURL(performer.Images[0])
-					if err != nil {
-						return err
-					}
-					err = r.Performer().UpdateImage(createdPerformer.ID, image)
-				}
-				return err
+				return CreateScrapedPerformer(performer, t.box.Endpoint, r)
 			})
 			if err != nil {
 				logger.Errorf("Failed to save performer %s: %s", *t.name, err.Error())
@@ -264,4 +219,55 @@ func getNullString(val *string) sql.NullString {
 	} else {
 		return sql.NullString{String: *val, Valid: true}
 	}
+}
+
+func CreateScrapedPerformer(performer *models.ScrapedScenePerformer, endpoint string, r models.Repository) error {
+	currentTime := time.Now()
+	newPerformer := models.Performer{
+		Aliases:      getNullString(performer.Aliases),
+		Birthdate:    getDate(performer.Birthdate),
+		CareerLength: getNullString(performer.CareerLength),
+		Checksum:     utils.MD5FromString(performer.Name),
+		Country:      getNullString(performer.Country),
+		CreatedAt:    models.SQLiteTimestamp{Timestamp: currentTime},
+		Ethnicity:    getNullString(performer.Ethnicity),
+		EyeColor:     getNullString(performer.EyeColor),
+		FakeTits:     getNullString(performer.FakeTits),
+		Favorite:     sql.NullBool{Bool: false, Valid: true},
+		Gender:       getNullString(performer.Gender),
+		Height:       getNullString(performer.Height),
+		Instagram:    getNullString(performer.Instagram),
+		Measurements: getNullString(performer.Measurements),
+		Name:         sql.NullString{String: performer.Name, Valid: true},
+		Piercings:    getNullString(performer.Piercings),
+		Tattoos:      getNullString(performer.Tattoos),
+		Twitter:      getNullString(performer.Twitter),
+		URL:          getNullString(performer.URL),
+		UpdatedAt:    models.SQLiteTimestamp{Timestamp: currentTime},
+	}
+
+	createdPerformer, err := r.Performer().Create(newPerformer)
+	if err != nil {
+		return err
+	}
+
+	err = r.Performer().UpdateStashIDs(createdPerformer.ID, []models.StashID{
+		{
+			Endpoint: endpoint,
+			StashID:  *performer.RemoteSiteID,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(performer.Images) > 0 {
+		image, err := utils.ReadImageFromURL(performer.Images[0])
+		if err != nil {
+			return err
+		}
+		err = r.Performer().UpdateImage(createdPerformer.ID, image)
+	}
+
+	return nil
 }

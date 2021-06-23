@@ -18,26 +18,27 @@ func NewClient(cli *http.Client, baseURL string, options ...client.HTTPRequestOp
 }
 
 type Query struct {
-	FindPerformer            *Performer                   "json:\"findPerformer\" graphql:\"findPerformer\""
-	QueryPerformers          QueryPerformersResultType    "json:\"queryPerformers\" graphql:\"queryPerformers\""
-	FindStudio               *Studio                      "json:\"findStudio\" graphql:\"findStudio\""
-	QueryStudios             QueryStudiosResultType       "json:\"queryStudios\" graphql:\"queryStudios\""
-	FindTag                  *Tag                         "json:\"findTag\" graphql:\"findTag\""
-	QueryTags                QueryTagsResultType          "json:\"queryTags\" graphql:\"queryTags\""
-	FindTagCategory          *TagCategory                 "json:\"findTagCategory\" graphql:\"findTagCategory\""
-	QueryTagCategories       QueryTagCategoriesResultType "json:\"queryTagCategories\" graphql:\"queryTagCategories\""
-	FindScene                *Scene                       "json:\"findScene\" graphql:\"findScene\""
-	FindSceneByFingerprint   []*Scene                     "json:\"findSceneByFingerprint\" graphql:\"findSceneByFingerprint\""
-	FindScenesByFingerprints []*Scene                     "json:\"findScenesByFingerprints\" graphql:\"findScenesByFingerprints\""
-	QueryScenes              QueryScenesResultType        "json:\"queryScenes\" graphql:\"queryScenes\""
-	FindEdit                 *Edit                        "json:\"findEdit\" graphql:\"findEdit\""
-	QueryEdits               QueryEditsResultType         "json:\"queryEdits\" graphql:\"queryEdits\""
-	FindUser                 *User                        "json:\"findUser\" graphql:\"findUser\""
-	QueryUsers               QueryUsersResultType         "json:\"queryUsers\" graphql:\"queryUsers\""
-	Me                       *User                        "json:\"me\" graphql:\"me\""
-	SearchPerformer          []*Performer                 "json:\"searchPerformer\" graphql:\"searchPerformer\""
-	SearchScene              []*Scene                     "json:\"searchScene\" graphql:\"searchScene\""
-	Version                  Version                      "json:\"version\" graphql:\"version\""
+	FindPerformer                *Performer                   "json:\"findPerformer\" graphql:\"findPerformer\""
+	QueryPerformers              QueryPerformersResultType    "json:\"queryPerformers\" graphql:\"queryPerformers\""
+	FindStudio                   *Studio                      "json:\"findStudio\" graphql:\"findStudio\""
+	QueryStudios                 QueryStudiosResultType       "json:\"queryStudios\" graphql:\"queryStudios\""
+	FindTag                      *Tag                         "json:\"findTag\" graphql:\"findTag\""
+	QueryTags                    QueryTagsResultType          "json:\"queryTags\" graphql:\"queryTags\""
+	FindTagCategory              *TagCategory                 "json:\"findTagCategory\" graphql:\"findTagCategory\""
+	QueryTagCategories           QueryTagCategoriesResultType "json:\"queryTagCategories\" graphql:\"queryTagCategories\""
+	FindScene                    *Scene                       "json:\"findScene\" graphql:\"findScene\""
+	FindSceneByFingerprint       []*Scene                     "json:\"findSceneByFingerprint\" graphql:\"findSceneByFingerprint\""
+	FindScenesByFingerprints     []*Scene                     "json:\"findScenesByFingerprints\" graphql:\"findScenesByFingerprints\""
+	FindScenesByFullFingerprints []*Scene                     "json:\"findScenesByFullFingerprints\" graphql:\"findScenesByFullFingerprints\""
+	QueryScenes                  QueryScenesResultType        "json:\"queryScenes\" graphql:\"queryScenes\""
+	FindEdit                     *Edit                        "json:\"findEdit\" graphql:\"findEdit\""
+	QueryEdits                   QueryEditsResultType         "json:\"queryEdits\" graphql:\"queryEdits\""
+	FindUser                     *User                        "json:\"findUser\" graphql:\"findUser\""
+	QueryUsers                   QueryUsersResultType         "json:\"queryUsers\" graphql:\"queryUsers\""
+	Me                           *User                        "json:\"me\" graphql:\"me\""
+	SearchPerformer              []*Performer                 "json:\"searchPerformer\" graphql:\"searchPerformer\""
+	SearchScene                  []*Scene                     "json:\"searchScene\" graphql:\"searchScene\""
+	Version                      Version                      "json:\"version\" graphql:\"version\""
 }
 
 type Mutation struct {
@@ -120,6 +121,7 @@ type PerformerFragment struct {
 	Disambiguation  *string                     "json:\"disambiguation\" graphql:\"disambiguation\""
 	Aliases         []string                    "json:\"aliases\" graphql:\"aliases\""
 	Gender          *GenderEnum                 "json:\"gender\" graphql:\"gender\""
+	MergedIds       []string                    "json:\"merged_ids\" graphql:\"merged_ids\""
 	Urls            []*URLFragment              "json:\"urls\" graphql:\"urls\""
 	Images          []*ImageFragment            "json:\"images\" graphql:\"images\""
 	Birthdate       *FuzzyDateFragment          "json:\"birthdate\" graphql:\"birthdate\""
@@ -160,8 +162,8 @@ type SceneFragment struct {
 type FindSceneByFingerprint struct {
 	FindSceneByFingerprint []*SceneFragment "json:\"findSceneByFingerprint\" graphql:\"findSceneByFingerprint\""
 }
-type FindScenesByFingerprints struct {
-	FindScenesByFingerprints []*SceneFragment "json:\"findScenesByFingerprints\" graphql:\"findScenesByFingerprints\""
+type FindScenesByFullFingerprints struct {
+	FindScenesByFullFingerprints []*SceneFragment "json:\"findScenesByFullFingerprints\" graphql:\"findScenesByFullFingerprints\""
 }
 type SearchScene struct {
 	SearchScene []*SceneFragment "json:\"searchScene\" graphql:\"searchScene\""
@@ -172,6 +174,9 @@ type SearchPerformer struct {
 type FindPerformerByID struct {
 	FindPerformer *PerformerFragment "json:\"findPerformer\" graphql:\"findPerformer\""
 }
+type FindSceneByID struct {
+	FindScene *SceneFragment "json:\"findScene\" graphql:\"findScene\""
+}
 type SubmitFingerprintPayload struct {
 	SubmitFingerprint bool "json:\"submitFingerprint\" graphql:\"submitFingerprint\""
 }
@@ -180,51 +185,6 @@ const FindSceneByFingerprintQuery = `query FindSceneByFingerprint ($fingerprint:
 	findSceneByFingerprint(fingerprint: $fingerprint) {
 		... SceneFragment
 	}
-}
-fragment TagFragment on Tag {
-	name
-	id
-}
-fragment PerformerFragment on Performer {
-	id
-	name
-	disambiguation
-	aliases
-	gender
-	urls {
-		... URLFragment
-	}
-	images {
-		... ImageFragment
-	}
-	birthdate {
-		... FuzzyDateFragment
-	}
-	ethnicity
-	country
-	eye_color
-	hair_color
-	height
-	measurements {
-		... MeasurementsFragment
-	}
-	breast_type
-	career_start_year
-	career_end_year
-	tattoos {
-		... BodyModificationFragment
-	}
-	piercings {
-		... BodyModificationFragment
-	}
-}
-fragment FuzzyDateFragment on FuzzyDate {
-	date
-	accuracy
-}
-fragment BodyModificationFragment on BodyModification {
-	location
-	description
 }
 fragment FingerprintFragment on Fingerprint {
 	algorithm
@@ -270,11 +230,9 @@ fragment StudioFragment on Studio {
 		... ImageFragment
 	}
 }
-fragment ImageFragment on Image {
+fragment TagFragment on Tag {
+	name
 	id
-	url
-	width
-	height
 }
 fragment PerformerAppearanceFragment on PerformerAppearance {
 	as
@@ -282,11 +240,59 @@ fragment PerformerAppearanceFragment on PerformerAppearance {
 		... PerformerFragment
 	}
 }
+fragment PerformerFragment on Performer {
+	id
+	name
+	disambiguation
+	aliases
+	gender
+	merged_ids
+	urls {
+		... URLFragment
+	}
+	images {
+		... ImageFragment
+	}
+	birthdate {
+		... FuzzyDateFragment
+	}
+	ethnicity
+	country
+	eye_color
+	hair_color
+	height
+	measurements {
+		... MeasurementsFragment
+	}
+	breast_type
+	career_start_year
+	career_end_year
+	tattoos {
+		... BodyModificationFragment
+	}
+	piercings {
+		... BodyModificationFragment
+	}
+}
 fragment MeasurementsFragment on Measurements {
 	band_size
 	cup_size
 	waist
 	hip
+}
+fragment ImageFragment on Image {
+	id
+	url
+	width
+	height
+}
+fragment FuzzyDateFragment on FuzzyDate {
+	date
+	accuracy
+}
+fragment BodyModificationFragment on BodyModification {
+	location
+	description
 }
 `
 
@@ -303,18 +309,20 @@ func (c *Client) FindSceneByFingerprint(ctx context.Context, fingerprint Fingerp
 	return &res, nil
 }
 
-const FindScenesByFingerprintsQuery = `query FindScenesByFingerprints ($fingerprints: [String!]!) {
-	findScenesByFingerprints(fingerprints: $fingerprints) {
+const FindScenesByFullFingerprintsQuery = `query FindScenesByFullFingerprints ($fingerprints: [FingerprintQueryInput!]!) {
+	findScenesByFullFingerprints(fingerprints: $fingerprints) {
 		... SceneFragment
 	}
 }
-fragment TagFragment on Tag {
+fragment StudioFragment on Studio {
 	name
 	id
-}
-fragment FuzzyDateFragment on FuzzyDate {
-	date
-	accuracy
+	urls {
+		... URLFragment
+	}
+	images {
+		... ImageFragment
+	}
 }
 fragment PerformerAppearanceFragment on PerformerAppearance {
 	as
@@ -322,12 +330,44 @@ fragment PerformerAppearanceFragment on PerformerAppearance {
 		... PerformerFragment
 	}
 }
+fragment SceneFragment on Scene {
+	id
+	title
+	details
+	duration
+	date
+	urls {
+		... URLFragment
+	}
+	images {
+		... ImageFragment
+	}
+	studio {
+		... StudioFragment
+	}
+	tags {
+		... TagFragment
+	}
+	performers {
+		... PerformerAppearanceFragment
+	}
+	fingerprints {
+		... FingerprintFragment
+	}
+}
+fragment ImageFragment on Image {
+	id
+	url
+	width
+	height
+}
 fragment PerformerFragment on Performer {
 	id
 	name
 	disambiguation
 	aliases
 	gender
+	merged_ids
 	urls {
 		... URLFragment
 	}
@@ -355,6 +395,10 @@ fragment PerformerFragment on Performer {
 		... BodyModificationFragment
 	}
 }
+fragment FuzzyDateFragment on FuzzyDate {
+	date
+	accuracy
+}
 fragment MeasurementsFragment on Measurements {
 	band_size
 	cup_size
@@ -365,65 +409,28 @@ fragment BodyModificationFragment on BodyModification {
 	location
 	description
 }
-fragment SceneFragment on Scene {
-	id
-	title
-	details
-	duration
-	date
-	urls {
-		... URLFragment
-	}
-	images {
-		... ImageFragment
-	}
-	studio {
-		... StudioFragment
-	}
-	tags {
-		... TagFragment
-	}
-	performers {
-		... PerformerAppearanceFragment
-	}
-	fingerprints {
-		... FingerprintFragment
-	}
-}
-fragment URLFragment on URL {
-	url
-	type
-}
-fragment ImageFragment on Image {
-	id
-	url
-	width
-	height
-}
-fragment StudioFragment on Studio {
-	name
-	id
-	urls {
-		... URLFragment
-	}
-	images {
-		... ImageFragment
-	}
-}
 fragment FingerprintFragment on Fingerprint {
 	algorithm
 	hash
 	duration
 }
+fragment URLFragment on URL {
+	url
+	type
+}
+fragment TagFragment on Tag {
+	name
+	id
+}
 `
 
-func (c *Client) FindScenesByFingerprints(ctx context.Context, fingerprints []string, httpRequestOptions ...client.HTTPRequestOption) (*FindScenesByFingerprints, error) {
+func (c *Client) FindScenesByFullFingerprints(ctx context.Context, fingerprints []*FingerprintQueryInput, httpRequestOptions ...client.HTTPRequestOption) (*FindScenesByFullFingerprints, error) {
 	vars := map[string]interface{}{
 		"fingerprints": fingerprints,
 	}
 
-	var res FindScenesByFingerprints
-	if err := c.Client.Post(ctx, FindScenesByFingerprintsQuery, &res, vars, httpRequestOptions...); err != nil {
+	var res FindScenesByFullFingerprints
+	if err := c.Client.Post(ctx, FindScenesByFullFingerprintsQuery, &res, vars, httpRequestOptions...); err != nil {
 		return nil, err
 	}
 
@@ -435,6 +442,20 @@ const SearchSceneQuery = `query SearchScene ($term: String!) {
 		... SceneFragment
 	}
 }
+fragment TagFragment on Tag {
+	name
+	id
+}
+fragment PerformerAppearanceFragment on PerformerAppearance {
+	as
+	performer {
+		... PerformerFragment
+	}
+}
+fragment FuzzyDateFragment on FuzzyDate {
+	date
+	accuracy
+}
 fragment MeasurementsFragment on Measurements {
 	band_size
 	cup_size
@@ -449,24 +470,6 @@ fragment FingerprintFragment on Fingerprint {
 	algorithm
 	hash
 	duration
-}
-fragment URLFragment on URL {
-	url
-	type
-}
-fragment ImageFragment on Image {
-	id
-	url
-	width
-	height
-}
-fragment TagFragment on Tag {
-	name
-	id
-}
-fragment FuzzyDateFragment on FuzzyDate {
-	date
-	accuracy
 }
 fragment SceneFragment on Scene {
 	id
@@ -493,6 +496,16 @@ fragment SceneFragment on Scene {
 		... FingerprintFragment
 	}
 }
+fragment URLFragment on URL {
+	url
+	type
+}
+fragment ImageFragment on Image {
+	id
+	url
+	width
+	height
+}
 fragment StudioFragment on Studio {
 	name
 	id
@@ -503,18 +516,13 @@ fragment StudioFragment on Studio {
 		... ImageFragment
 	}
 }
-fragment PerformerAppearanceFragment on PerformerAppearance {
-	as
-	performer {
-		... PerformerFragment
-	}
-}
 fragment PerformerFragment on Performer {
 	id
 	name
 	disambiguation
 	aliases
 	gender
+	merged_ids
 	urls {
 		... URLFragment
 	}
@@ -562,16 +570,6 @@ const SearchPerformerQuery = `query SearchPerformer ($term: String!) {
 		... PerformerFragment
 	}
 }
-fragment FuzzyDateFragment on FuzzyDate {
-	date
-	accuracy
-}
-fragment MeasurementsFragment on Measurements {
-	band_size
-	cup_size
-	waist
-	hip
-}
 fragment BodyModificationFragment on BodyModification {
 	location
 	description
@@ -582,6 +580,7 @@ fragment PerformerFragment on Performer {
 	disambiguation
 	aliases
 	gender
+	merged_ids
 	urls {
 		... URLFragment
 	}
@@ -618,6 +617,16 @@ fragment ImageFragment on Image {
 	url
 	width
 	height
+}
+fragment FuzzyDateFragment on FuzzyDate {
+	date
+	accuracy
+}
+fragment MeasurementsFragment on Measurements {
+	band_size
+	cup_size
+	waist
+	hip
 }
 `
 
@@ -639,10 +648,6 @@ const FindPerformerByIDQuery = `query FindPerformerByID ($id: ID!) {
 		... PerformerFragment
 	}
 }
-fragment FuzzyDateFragment on FuzzyDate {
-	date
-	accuracy
-}
 fragment MeasurementsFragment on Measurements {
 	band_size
 	cup_size
@@ -659,6 +664,7 @@ fragment PerformerFragment on Performer {
 	disambiguation
 	aliases
 	gender
+	merged_ids
 	urls {
 		... URLFragment
 	}
@@ -696,6 +702,10 @@ fragment ImageFragment on Image {
 	width
 	height
 }
+fragment FuzzyDateFragment on FuzzyDate {
+	date
+	accuracy
+}
 `
 
 func (c *Client) FindPerformerByID(ctx context.Context, id string, httpRequestOptions ...client.HTTPRequestOption) (*FindPerformerByID, error) {
@@ -705,6 +715,134 @@ func (c *Client) FindPerformerByID(ctx context.Context, id string, httpRequestOp
 
 	var res FindPerformerByID
 	if err := c.Client.Post(ctx, FindPerformerByIDQuery, &res, vars, httpRequestOptions...); err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+const FindSceneByIDQuery = `query FindSceneByID ($id: ID!) {
+	findScene(id: $id) {
+		... SceneFragment
+	}
+}
+fragment BodyModificationFragment on BodyModification {
+	location
+	description
+}
+fragment URLFragment on URL {
+	url
+	type
+}
+fragment StudioFragment on Studio {
+	name
+	id
+	urls {
+		... URLFragment
+	}
+	images {
+		... ImageFragment
+	}
+}
+fragment PerformerFragment on Performer {
+	id
+	name
+	disambiguation
+	aliases
+	gender
+	merged_ids
+	urls {
+		... URLFragment
+	}
+	images {
+		... ImageFragment
+	}
+	birthdate {
+		... FuzzyDateFragment
+	}
+	ethnicity
+	country
+	eye_color
+	hair_color
+	height
+	measurements {
+		... MeasurementsFragment
+	}
+	breast_type
+	career_start_year
+	career_end_year
+	tattoos {
+		... BodyModificationFragment
+	}
+	piercings {
+		... BodyModificationFragment
+	}
+}
+fragment FuzzyDateFragment on FuzzyDate {
+	date
+	accuracy
+}
+fragment MeasurementsFragment on Measurements {
+	band_size
+	cup_size
+	waist
+	hip
+}
+fragment FingerprintFragment on Fingerprint {
+	algorithm
+	hash
+	duration
+}
+fragment SceneFragment on Scene {
+	id
+	title
+	details
+	duration
+	date
+	urls {
+		... URLFragment
+	}
+	images {
+		... ImageFragment
+	}
+	studio {
+		... StudioFragment
+	}
+	tags {
+		... TagFragment
+	}
+	performers {
+		... PerformerAppearanceFragment
+	}
+	fingerprints {
+		... FingerprintFragment
+	}
+}
+fragment ImageFragment on Image {
+	id
+	url
+	width
+	height
+}
+fragment TagFragment on Tag {
+	name
+	id
+}
+fragment PerformerAppearanceFragment on PerformerAppearance {
+	as
+	performer {
+		... PerformerFragment
+	}
+}
+`
+
+func (c *Client) FindSceneByID(ctx context.Context, id string, httpRequestOptions ...client.HTTPRequestOption) (*FindSceneByID, error) {
+	vars := map[string]interface{}{
+		"id": id,
+	}
+
+	var res FindSceneByID
+	if err := c.Client.Post(ctx, FindSceneByIDQuery, &res, vars, httpRequestOptions...); err != nil {
 		return nil, err
 	}
 

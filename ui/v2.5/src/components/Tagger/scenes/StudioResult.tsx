@@ -6,7 +6,7 @@ import cx from "classnames";
 import { SuccessIcon, Modal, StudioSelect } from "src/components/Shared";
 import * as GQL from "src/core/generated-graphql";
 import { ValidTypes } from "src/components/Shared/Select";
-import { IStashBoxStudio } from "./utils";
+import { IStashBoxStudio } from "../utils";
 
 export type StudioOperation =
   | { type: "create"; data: IStashBoxStudio }

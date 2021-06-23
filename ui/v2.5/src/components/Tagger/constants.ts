@@ -11,16 +11,19 @@ export const DEFAULT_BLACKLIST = [
   "\\]",
 ];
 export const DEFAULT_EXCLUDED_PERFORMER_FIELDS = ["name"];
+export const DEFAULT_EXCLUDED_SCENE_FIELDS = [];
 
 export const initialConfig: ITaggerConfig = {
   blacklist: DEFAULT_BLACKLIST,
   showMales: false,
   mode: "auto",
-  setCoverImage: true,
   setTags: false,
+  createTags: false,
   tagOperation: "merge",
   fingerprintQueue: {},
   excludedPerformerFields: DEFAULT_EXCLUDED_PERFORMER_FIELDS,
+  excludedSceneFields: DEFAULT_EXCLUDED_SCENE_FIELDS,
+  setOrganized: false,
 };
 
 export type ParseMode = "auto" | "filename" | "dir" | "path" | "metadata";
@@ -28,12 +31,14 @@ export interface ITaggerConfig {
   blacklist: string[];
   showMales: boolean;
   mode: ParseMode;
-  setCoverImage: boolean;
   setTags: boolean;
+  createTags: boolean;
   tagOperation: string;
   selectedEndpoint?: string;
   fingerprintQueue: Record<string, string[]>;
   excludedPerformerFields?: string[];
+  excludedSceneFields?: string[];
+  setOrganized: boolean;
 }
 
 export const PERFORMER_FIELDS = [
@@ -51,4 +56,14 @@ export const PERFORMER_FIELDS = [
   "career_length",
   "tattoos",
   "piercings",
+];
+
+export const SCENE_FIELDS = [
+  "title",
+  "url",
+  "date",
+  "description",
+  "cover",
+  "studio",
+  "performers",
 ];

@@ -81,6 +81,7 @@ type Edit struct {
 	Status    VoteStatusEnum `json:"status"`
 	Applied   bool           `json:"applied"`
 	Created   time.Time      `json:"created"`
+	Updated   time.Time      `json:"updated"`
 }
 
 type EditComment struct {
@@ -134,9 +135,21 @@ type EyeColorCriterionInput struct {
 }
 
 type Fingerprint struct {
-	Hash      string               `json:"hash"`
-	Algorithm FingerprintAlgorithm `json:"algorithm"`
-	Duration  int                  `json:"duration"`
+	Hash        string               `json:"hash"`
+	Algorithm   FingerprintAlgorithm `json:"algorithm"`
+	Duration    int                  `json:"duration"`
+	Submissions int                  `json:"submissions"`
+	Created     time.Time            `json:"created"`
+	Updated     time.Time            `json:"updated"`
+}
+
+type FingerprintEditInput struct {
+	Hash        string               `json:"hash"`
+	Algorithm   FingerprintAlgorithm `json:"algorithm"`
+	Duration    int                  `json:"duration"`
+	Submissions int                  `json:"submissions"`
+	Created     time.Time            `json:"created"`
+	Updated     time.Time            `json:"updated"`
 }
 
 type FingerprintInput struct {
@@ -255,6 +268,7 @@ type Performer struct {
 	Deleted         bool                `json:"deleted"`
 	Edits           []*Edit             `json:"edits"`
 	SceneCount      int                 `json:"scene_count"`
+	MergedIds       []string            `json:"merged_ids"`
 }
 
 func (Performer) IsEditTarget() {}
@@ -359,16 +373,16 @@ type PerformerEditInput struct {
 }
 
 type PerformerEditOptions struct {
-	//  Set performer alias on scenes without alias to old name if name is changed
+	// Set performer alias on scenes without alias to old name if name is changed
 	SetModifyAliases bool `json:"set_modify_aliases"`
-	//  Set performer alias on scenes attached to merge sources to old name
+	// Set performer alias on scenes attached to merge sources to old name
 	SetMergeAliases bool `json:"set_merge_aliases"`
 }
 
 type PerformerEditOptionsInput struct {
-	//  Set performer alias on scenes without alias to old name if name is changed
+	// Set performer alias on scenes without alias to old name if name is changed
 	SetModifyAliases *bool `json:"set_modify_aliases"`
-	//  Set performer alias on scenes attached to merge sources to old name
+	// Set performer alias on scenes attached to merge sources to old name
 	SetMergeAliases *bool `json:"set_merge_aliases"`
 }
 
@@ -507,7 +521,7 @@ type SceneCreateInput struct {
 	Performers   []*PerformerAppearanceInput `json:"performers"`
 	TagIds       []string                    `json:"tag_ids"`
 	ImageIds     []string                    `json:"image_ids"`
-	Fingerprints []*FingerprintInput         `json:"fingerprints"`
+	Fingerprints []*FingerprintEditInput     `json:"fingerprints"`
 	Duration     *int                        `json:"duration"`
 	Director     *string                     `json:"director"`
 }
@@ -547,7 +561,7 @@ type SceneEditDetailsInput struct {
 	Performers   []*PerformerAppearanceInput `json:"performers"`
 	TagIds       []string                    `json:"tag_ids"`
 	ImageIds     []string                    `json:"image_ids"`
-	Fingerprints []*FingerprintInput         `json:"fingerprints"`
+	Fingerprints []*FingerprintEditInput     `json:"fingerprints"`
 	Duration     *int                        `json:"duration"`
 	Director     *string                     `json:"director"`
 }
@@ -578,6 +592,8 @@ type SceneFilterType struct {
 	Performers *MultiIDCriterionInput `json:"performers"`
 	// Filter to include scenes with performer appearing as alias
 	Alias *StringCriterionInput `json:"alias"`
+	// Filter to only include scenes with these fingerprints
+	Fingerprints *MultiIDCriterionInput `json:"fingerprints"`
 }
 
 type SceneUpdateInput struct {
@@ -590,7 +606,7 @@ type SceneUpdateInput struct {
 	Performers   []*PerformerAppearanceInput `json:"performers"`
 	TagIds       []string                    `json:"tag_ids"`
 	ImageIds     []string                    `json:"image_ids"`
-	Fingerprints []*FingerprintInput         `json:"fingerprints"`
+	Fingerprints []*FingerprintEditInput     `json:"fingerprints"`
 	Duration     *int                        `json:"duration"`
 	Director     *string                     `json:"director"`
 }

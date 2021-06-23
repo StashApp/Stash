@@ -1,2 +1,2 @@
-export { Tagger as default } from "./Tagger";
+export { Tagger as default } from "./scenes/SceneTagger";
 export { PerformerTagger } from "./performers/PerformerTagger";

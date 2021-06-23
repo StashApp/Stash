@@ -4,23 +4,25 @@ import { Button } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
 import { uniq } from "lodash";
 import { blobToBase64 } from "base64-blob";
+import distance from "hamming-distance";
 
 import * as GQL from "src/core/generated-graphql";
 import {
   LoadingIndicator,
+  HoverPopover,
   SuccessIcon,
   TruncatedText,
 } from "src/components/Shared";
-import PerformerResult, { PerformerOperation } from "./PerformerResult";
+import PerformerResult, { PerformerOperation } from "../PerformerResult";
 import StudioResult, { StudioOperation } from "./StudioResult";
-import { IStashBoxScene } from "./utils";
+import { IStashBoxScene } from "../utils";
 import {
   useCreateTag,
   useCreatePerformer,
   useCreateStudio,
   useUpdatePerformerStashID,
   useUpdateStudioStashID,
-} from "./queries";
+} from "../queries";
 
 const getDurationStatus = (
   scene: IStashBoxScene,
@@ -66,23 +68,57 @@ const getFingerprintStatus = (
   const checksumMatch = scene.fingerprints.some(
     (f) => f.hash === stashScene.checksum || f.hash === stashScene.oshash
   );
-  const phashMatch = scene.fingerprints.some(
-    (f) => f.hash === stashScene.phash
+  const phashMatches = scene.fingerprints.filter(
+    (f) => f.algorithm === "PHASH" && distance(f.hash, stashScene.phash) <= 8
   );
-  if (checksumMatch || phashMatch)
+
+  const phashList = (
+    <div className="m-2">
+      {phashMatches.map((fp) => (
+        <div>
+          <b>{fp.hash}</b>
+          {fp.hash === stashScene.phash
+            ? ", Exact match"
+            : `, distance ${distance(fp.hash, stashScene.phash)}`}
+        </div>
+      ))}
+    </div>
+  );
+
+  if (checksumMatch || phashMatches.length > 0)
     return (
       <div className="font-weight-bold">
         <SuccessIcon className="mr-2" />
-        <FormattedMessage
-          id="component_tagger.results.hash_matches"
-          values={{
-            hash_type: (
+        {phashMatches.length > 0 ? (
+          <HoverPopover
+            placement="bottom"
+            content={phashList}
+            className="PHashPopover"
+          >
+            {phashMatches.length > 1 ? (
               <FormattedMessage
-                id={`media_info.${phashMatch ? "phash" : "checksum"}`}
+                id="component_tagger.results.phash_matches"
+                values={{
+                  count: phashMatches.length,
+                }}
               />
-            ),
-          }}
-        />
+            ) : (
+              <FormattedMessage
+                id="component_tagger.results.hash_matches"
+                values={{
+                  hash_type: <FormattedMessage id="media_info.phash" />,
+                }}
+              />
+            )}
+          </HoverPopover>
+        ) : (
+          <FormattedMessage
+            id="component_tagger.results.hash_matches"
+            values={{
+              hash_type: <FormattedMessage id="media_info.checksum" />,
+            }}
+          />
+        )}
       </div>
     );
 };
@@ -94,7 +130,7 @@ interface IStashSearchResultProps {
   setActive: () => void;
   showMales: boolean;
   setScene: (scene: GQL.SlimSceneDataFragment) => void;
-  setCoverImage: boolean;
+  excludedFields?: string[];
   tagOperation: string;
   setTags: boolean;
   endpoint: string;
@@ -118,7 +154,7 @@ const StashSearchResult: React.FC<IStashSearchResultProps> = ({
   setActive,
   showMales,
   setScene,
-  setCoverImage,
+  excludedFields = [],
   tagOperation,
   setTags,
   endpoint,
@@ -286,7 +322,7 @@ const StashSearchResult: React.FC<IStashSearchResultProps> = ({
       setSaveState("Updating scene");
       const imgurl = scene.images[0];
       let imgData = null;
-      if (imgurl && setCoverImage) {
+      if (imgurl && !excludedFields.includes("cover")) {
         const img = await fetch(imgurl, {
           mode: "cors",
           cache: "no-store",

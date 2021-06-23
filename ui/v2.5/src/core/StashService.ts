@@ -995,6 +995,14 @@ export const mutateStashBoxBatchPerformerTag = (
     variables: { input },
   });
 
+export const mutateStashBoxBatchSceneTag = (
+  input: GQL.StashBoxBatchSceneTagInput
+) =>
+  client.mutate<GQL.StashBoxBatchSceneTagMutation>({
+    mutation: GQL.StashBoxBatchSceneTagDocument,
+    variables: { input },
+  });
+
 export const querySceneByPathRegex = (filter: GQL.FindFilterType) =>
   client.query<GQL.FindScenesByPathRegexQuery>({
     query: GQL.FindScenesByPathRegexDocument,
@@ -1076,19 +1084,5 @@ export const stashBoxSceneBatchQuery = (
     query: GQL.QueryStashBoxSceneDocument,
     variables: {
       input: { scene_ids: sceneIds, stash_box_index: stashBoxIndex },
-    },
-  });
-
-export const stashBoxPerformerBatchQuery = (
-  performerIds: string[],
-  stashBoxIndex: number
-) =>
-  client?.query<
-    GQL.QueryStashBoxPerformerQuery,
-    GQL.QueryStashBoxPerformerQueryVariables
-  >({
-    query: GQL.QueryStashBoxPerformerDocument,
-    variables: {
-      input: { performer_ids: performerIds, stash_box_index: stashBoxIndex },
     },
   });

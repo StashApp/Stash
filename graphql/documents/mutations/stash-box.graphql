@@ -5,3 +5,7 @@ mutation SubmitStashBoxFingerprints($input: StashBoxFingerprintSubmissionInput!)
 mutation StashBoxBatchPerformerTag($input: StashBoxBatchPerformerTagInput!) {
   stashBoxBatchPerformerTag(input: $input)
 }
+
+mutation StashBoxBatchSceneTag($input: StashBoxBatchSceneTagInput!) {
+  stashBoxBatchSceneTag(input: $input)
+}

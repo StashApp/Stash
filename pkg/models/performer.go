@@ -8,6 +8,7 @@ type PerformerReader interface {
 	FindByImageID(imageID int) ([]*Performer, error)
 	FindByGalleryID(galleryID int) ([]*Performer, error)
 	FindByNames(names []string, nocase bool) ([]*Performer, error)
+	FindByStashID(stashID string, stashboxEndpoint string) ([]*Performer, error)
 	FindByStashIDStatus(hasStashID bool, stashboxEndpoint string) ([]*Performer, error)
 	CountByTagID(tagID int) (int, error)
 	Count() (int, error)

@@ -49,6 +49,7 @@ fragment PerformerFragment on Performer {
   disambiguation
   aliases
   gender
+  merged_ids
   urls {
     ...URLFragment
   }
@@ -75,11 +76,6 @@ fragment PerformerFragment on Performer {
   piercings {
     ...BodyModificationFragment
   }
-  details
-  death_date {
-    ...FuzzyDateFragment
-  }
-  weight
 }
 
 fragment PerformerAppearanceFragment on PerformerAppearance {
@@ -127,8 +123,8 @@ query FindSceneByFingerprint($fingerprint: FingerprintQueryInput!) {
   }
 }
 
-query FindScenesByFingerprints($fingerprints: [String!]!) {
-  findScenesByFingerprints(fingerprints: $fingerprints) {
+query FindScenesByFullFingerprints($fingerprints: [FingerprintQueryInput!]!) {
+  findScenesByFullFingerprints(fingerprints: $fingerprints) {
     ...SceneFragment
   }
 }
@@ -148,6 +144,12 @@ query SearchPerformer($term: String!) {
 query FindPerformerByID($id: ID!) {
   findPerformer(id: $id) {
     ...PerformerFragment
+  }
+}
+
+query FindSceneByID($id: ID!) {
+  findScene(id: $id) {
+    ...SceneFragment
   }
 }
 

@@ -361,7 +361,9 @@ const PerformerTaggerList: React.FC<IPerformerTaggerListProps> = ({
             />
           )}
           <Card className="performer-card p-0 m-0">
-            <img src={performer.image_path ?? ""} alt="" />
+            <Link to={`/performers/${performer.id}`}>
+              <img src={performer.image_path ?? ""} alt="" />
+            </Link>
           </Card>
           <div className={`${CLASSNAME}-details`}>
             <Link
@@ -501,7 +503,6 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
   const [showConfig, setShowConfig] = useState(false);
   const [showManual, setShowManual] = useState(false);
 
-  const [batchJobID, setBatchJobID] = useState<string | undefined | null>();
   const [batchJob, setBatchJob] = useState<JobFragment | undefined>();
 
   // monitor batch operation
@@ -511,7 +512,7 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
     }
 
     const event = jobsSubscribe.data.jobsSubscribe;
-    if (event.job.id !== batchJobID) {
+    if (event.job.description !== "Batch stash-box performer tag...") {
       return;
     }
 
@@ -519,9 +520,8 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
       setBatchJob(event.job);
     } else {
       setBatchJob(undefined);
-      setBatchJobID(undefined);
     }
-  }, [jobsSubscribe, batchJobID]);
+  }, [jobsSubscribe]);
 
   if (!config) return <LoadingIndicator />;
 
@@ -545,36 +545,25 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
         .filter((n) => n.length > 0);
 
       if (names.length > 0) {
-        const ret = await mutateStashBoxBatchPerformerTag({
+        await mutateStashBoxBatchPerformerTag({
           performer_names: names,
           endpoint: selectedEndpointIndex,
           refresh: false,
         });
-
-        setBatchJobID(ret.data?.stashBoxBatchPerformerTag);
       }
     }
   }
 
   async function batchUpdate(ids: string[] | undefined, refresh: boolean) {
     if (config && selectedEndpoint) {
-      const ret = await mutateStashBoxBatchPerformerTag({
+      await mutateStashBoxBatchPerformerTag({
         performer_ids: ids,
         endpoint: selectedEndpointIndex,
         refresh,
         exclude_fields: config.excludedPerformerFields ?? [],
       });
-
-      setBatchJobID(ret.data?.stashBoxBatchPerformerTag);
     }
   }
-
-  // const progress =
-  //   jobStatus.data?.metadataUpdate.status ===
-  //     "Stash-Box Performer Batch Operation" &&
-  //   jobStatus.data.metadataUpdate.progress >= 0
-  //     ? jobStatus.data.metadataUpdate.progress * 100
-  //     : null;
 
   function renderStatus() {
     if (batchJob) {
@@ -583,8 +572,8 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
           ? batchJob.progress * 100
           : undefined;
       return (
-        <Form.Group className="px-4">
-          <h5>Status: Tagging performers</h5>
+        <Form.Group className="py-4 px-2">
+          <h5>Status: {batchJob.description}</h5>
           {progress !== undefined && (
             <ProgressBar
               animated
@@ -592,14 +581,9 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
               label={`${progress.toFixed(0)}%`}
             />
           )}
-        </Form.Group>
-      );
-    }
-
-    if (batchJobID !== undefined) {
-      return (
-        <Form.Group className="px-4">
-          <h5>Status: Tagging job queued</h5>
+          {(batchJob.subTasks ?? []).length > 0 && (
+            <div>{batchJob.subTasks?.join(", ")}</div>
+          )}
         </Form.Group>
       );
     }
@@ -612,12 +596,16 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
         onClose={() => setShowManual(false)}
         defaultActiveTab="Tagger.md"
       />
-      {renderStatus()}
       <div className="tagger-container mx-md-auto">
+        {renderStatus()}
         {selectedEndpointIndex !== -1 && selectedEndpoint ? (
           <>
             <div className="row mb-2 no-gutters">
-              <Button onClick={() => setShowConfig(!showConfig)} variant="link">
+              <Button
+                onClick={() => setShowConfig(!showConfig)}
+                variant="primary"
+                className="ml-2"
+              >
                 {showConfig ? "Hide" : "Show"} Configuration
               </Button>
               <Button
@@ -641,7 +629,7 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
                 endpoint: selectedEndpoint.endpoint,
                 index: selectedEndpointIndex,
               }}
-              isIdle={batchJobID === undefined}
+              isIdle={!batchJob}
               config={config}
               stashBoxes={stashConfig.data?.configuration.general.stashBoxes}
               onBatchAdd={batchAdd}

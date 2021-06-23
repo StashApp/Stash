@@ -303,3 +303,13 @@ func (qb *studioQueryBuilder) GetStashIDs(studioID int) ([]*models.StashID, erro
 func (qb *studioQueryBuilder) UpdateStashIDs(studioID int, stashIDs []models.StashID) error {
 	return qb.stashIDRepository().replace(studioID, stashIDs)
 }
+
+func (qb *studioQueryBuilder) FindByStashID(stashID string, stashboxEndpoint string) ([]*models.Studio, error) {
+	query := selectAll("studios") + `
+		JOIN studio_stash_ids as stashid_join on stashid_join.studio_id = studios.id
+		WHERE stashid_join.stash_id = ?
+		AND stashid_join.endpoint = ?
+	`
+	args := []interface{}{stashID, stashboxEndpoint}
+	return qb.queryStudios(query, args)
+}

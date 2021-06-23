@@ -858,3 +858,26 @@ func (_m *SceneReaderWriter) Wall(q *string) ([]*models.Scene, error) {
 
 	return r0, r1
 }
+
+// FindByStashIDStatus provides a mock function with given fields: stashID, stashboxEndpoint
+func (_m *SceneReaderWriter) FindByStashIDStatus(hasStashID bool, stashboxEndpoint string) ([]*models.Scene, error) {
+	ret := _m.Called(hasStashID, stashboxEndpoint)
+
+	var r0 []*models.Scene
+	if rf, ok := ret.Get(0).(func(bool, string) []*models.Scene); ok {
+		r0 = rf(hasStashID, stashboxEndpoint)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Scene)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(bool, string) error); ok {
+		r1 = rf(hasStashID, stashboxEndpoint)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

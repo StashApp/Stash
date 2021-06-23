@@ -4,7 +4,7 @@ import { useConfiguration } from "src/core/StashService";
 
 import { TextUtils } from "src/utils";
 import { ITaggerConfig, PERFORMER_FIELDS } from "../constants";
-import PerformerFieldSelector from "../PerformerFieldSelector";
+import FieldSelector from "../FieldSelector";
 
 interface IConfigProps {
   show: boolean;
@@ -90,7 +90,7 @@ const Config: React.FC<IConfigProps> = ({ show, config, setConfig }) => {
           </div>
         </Card>
       </Collapse>
-      <PerformerFieldSelector
+      <FieldSelector
         fields={PERFORMER_FIELDS}
         show={showExclusionModal}
         onSelect={handleFieldSelect}

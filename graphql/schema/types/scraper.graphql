@@ -73,6 +73,7 @@ type ScrapedSceneStudio {
   stored_id: ID
   name: String!
   url: String
+  image: String
 
   remote_site_id: String
 }
@@ -150,4 +151,22 @@ input StashBoxBatchPerformerTagInput {
   refresh: Boolean!
   performer_ids: [ID!]
   performer_names: [String!]
+}
+
+enum TagStrategy {
+  IGNORE
+  MERGE
+  OVERWRITE
+}
+
+input StashBoxBatchSceneTagInput {
+  endpoint: Int!
+  exclude_fields: [String!]
+  refresh: Boolean!
+  scene_ids: [ID!]
+  phash_distance: Int
+  set_organized: Boolean!
+  tag_strategy: TagStrategy!
+  create_tags: Boolean!
+  tag_male_performers: Boolean!
 }

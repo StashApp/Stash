@@ -9,6 +9,7 @@ type SceneReader interface {
 	FindByPerformerID(performerID int) ([]*Scene, error)
 	FindByGalleryID(performerID int) ([]*Scene, error)
 	FindDuplicates(distance int) ([][]*Scene, error)
+	FindByStashIDStatus(hasStashID bool, stashboxEndpoint string) ([]*Scene, error)
 	CountByPerformerID(performerID int) (int, error)
 	// FindByStudioID(studioID int) ([]*Scene, error)
 	FindByMovieID(movieID int) ([]*Scene, error)

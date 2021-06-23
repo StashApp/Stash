@@ -5,6 +5,7 @@ type StudioReader interface {
 	FindMany(ids []int) ([]*Studio, error)
 	FindChildren(id int) ([]*Studio, error)
 	FindByName(name string, nocase bool) (*Studio, error)
+	FindByStashID(stashID string, stashboxEndpoint string) ([]*Studio, error)
 	Count() (int, error)
 	All() ([]*Studio, error)
 	// TODO - this interface is temporary until the filter schema can fully

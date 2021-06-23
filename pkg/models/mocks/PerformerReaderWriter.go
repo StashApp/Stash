@@ -521,3 +521,26 @@ func (_m *PerformerReaderWriter) UpdateTags(performerID int, tagIDs []int) error
 
 	return r0
 }
+
+// FindByStashID provides a mock function with given fields: stashID, stashboxEndpoint
+func (_m *PerformerReaderWriter) FindByStashID(stashID string, stashboxEndpoint string) ([]*models.Performer, error) {
+	ret := _m.Called(stashID, stashboxEndpoint)
+
+	var r0 []*models.Performer
+	if rf, ok := ret.Get(0).(func(string, string) []*models.Performer); ok {
+		r0 = rf(stashID, stashboxEndpoint)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Performer)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(stashID, stashboxEndpoint)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

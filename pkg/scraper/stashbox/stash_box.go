@@ -26,6 +26,7 @@ const imageGetTimeout = time.Second * 30
 type Client struct {
 	client     *graphql.Client
 	txnManager models.TransactionManager
+	endpoint   string
 }
 
 // NewClient returns a new instance of a stash-box client.
@@ -41,6 +42,7 @@ func NewClient(box models.StashBox, txnManager models.TransactionManager) *Clien
 	return &Client{
 		client:     client,
 		txnManager: txnManager,
+		endpoint:   box.Endpoint,
 	}
 }
 
@@ -55,7 +57,7 @@ func (c Client) QueryStashBoxScene(queryStr string) ([]*models.ScrapedScene, err
 
 	var ret []*models.ScrapedScene
 	for _, s := range sceneFragments {
-		ss, err := sceneFragmentToScrapedScene(c.txnManager, s)
+		ss, err := c.sceneFragmentToScrapedScene(s)
 		if err != nil {
 			return nil, err
 		}
@@ -67,18 +69,13 @@ func (c Client) QueryStashBoxScene(queryStr string) ([]*models.ScrapedScene, err
 
 // FindStashBoxScenesByFingerprints queries stash-box for scenes using every
 // scene's MD5/OSHASH checksum, or PHash
-func (c Client) FindStashBoxScenesByFingerprints(sceneIDs []string) ([]*models.ScrapedScene, error) {
-	ids, err := utils.StringSliceToIntSlice(sceneIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	var fingerprints []string
+func (c Client) FindStashBoxScenesByFingerprints(sceneIDs []int) ([]*models.ScrapedScene, error) {
+	var fingerprints []*graphql.FingerprintQueryInput
 
 	if err := c.txnManager.WithReadTxn(context.TODO(), func(r models.ReaderRepository) error {
 		qb := r.Scene()
 
-		for _, sceneID := range ids {
+		for _, sceneID := range sceneIDs {
 			scene, err := qb.Find(sceneID)
 			if err != nil {
 				return err
@@ -89,15 +86,24 @@ func (c Client) FindStashBoxScenesByFingerprints(sceneIDs []string) ([]*models.S
 			}
 
 			if scene.Checksum.Valid {
-				fingerprints = append(fingerprints, scene.Checksum.String)
+				fingerprints = append(fingerprints, &graphql.FingerprintQueryInput{
+					Hash:      scene.Checksum.String,
+					Algorithm: graphql.FingerprintAlgorithmMd5,
+				})
 			}
 
 			if scene.OSHash.Valid {
-				fingerprints = append(fingerprints, scene.OSHash.String)
+				fingerprints = append(fingerprints, &graphql.FingerprintQueryInput{
+					Hash:      scene.OSHash.String,
+					Algorithm: graphql.FingerprintAlgorithmOshash,
+				})
 			}
 
 			if scene.Phash.Valid {
-				fingerprints = append(fingerprints, utils.PhashToString(scene.Phash.Int64))
+				fingerprints = append(fingerprints, &graphql.FingerprintQueryInput{
+					Hash:      utils.PhashToString(scene.Phash.Int64),
+					Algorithm: graphql.FingerprintAlgorithmPhash,
+				})
 			}
 		}
 
@@ -109,23 +115,23 @@ func (c Client) FindStashBoxScenesByFingerprints(sceneIDs []string) ([]*models.S
 	return c.findStashBoxScenesByFingerprints(fingerprints)
 }
 
-func (c Client) findStashBoxScenesByFingerprints(fingerprints []string) ([]*models.ScrapedScene, error) {
+func (c Client) findStashBoxScenesByFingerprints(fingerprints []*graphql.FingerprintQueryInput) ([]*models.ScrapedScene, error) {
 	var ret []*models.ScrapedScene
 	for i := 0; i < len(fingerprints); i += 100 {
 		end := i + 100
 		if end > len(fingerprints) {
 			end = len(fingerprints)
 		}
-		scenes, err := c.client.FindScenesByFingerprints(context.TODO(), fingerprints[i:end])
+		scenes, err := c.client.FindScenesByFullFingerprints(context.TODO(), fingerprints[i:end])
 
 		if err != nil {
 			return nil, err
 		}
 
-		sceneFragments := scenes.FindScenesByFingerprints
+		sceneFragments := scenes.FindScenesByFullFingerprints
 
 		for _, s := range sceneFragments {
-			ss, err := sceneFragmentToScrapedScene(c.txnManager, s)
+			ss, err := c.sceneFragmentToScrapedScene(s)
 			if err != nil {
 				return nil, err
 			}
@@ -430,8 +436,6 @@ func performerFragmentToScrapedScenePerformer(p graphql.PerformerFragment) *mode
 		RemoteSiteID: &id,
 		Images:       images,
 		// TODO - tags not currently supported
-		// TODO - Image - should be returned as a set of URLs. Will need a
-		// graphql schema change to accommodate this. Leave off for now.
 	}
 
 	if p.Height != nil && *p.Height > 0 {
@@ -463,6 +467,22 @@ func performerFragmentToScrapedScenePerformer(p graphql.PerformerFragment) *mode
 	return sp
 }
 
+func studioFragmentToScrapedSceneStudio(s *graphql.StudioFragment) *models.ScrapedSceneStudio {
+	studioID := s.ID
+	var image *string
+	if len(s.Images) > 0 {
+		image = &s.Images[0].URL
+	}
+	ss := models.ScrapedSceneStudio{
+		Name:         s.Name,
+		URL:          findURL(s.Urls, "HOME"),
+		Image:        image,
+		RemoteSiteID: &studioID,
+	}
+
+	return &ss
+}
+
 func getFirstImage(images []*graphql.ImageFragment) *string {
 	ret, err := fetchImage(images[0].URL)
 	if err != nil {
@@ -485,7 +505,7 @@ func getFingerprints(scene *graphql.SceneFragment) []*models.StashBoxFingerprint
 	return fingerprints
 }
 
-func sceneFragmentToScrapedScene(txnManager models.TransactionManager, s *graphql.SceneFragment) (*models.ScrapedScene, error) {
+func (c Client) sceneFragmentToScrapedScene(s *graphql.SceneFragment) (*models.ScrapedScene, error) {
 	stashID := s.ID
 	ss := &models.ScrapedScene{
 		Title:        s.Title,
@@ -505,51 +525,46 @@ func sceneFragmentToScrapedScene(txnManager models.TransactionManager, s *graphq
 		ss.Image = getFirstImage(s.Images)
 	}
 
-	if err := txnManager.WithReadTxn(context.TODO(), func(r models.ReaderRepository) error {
-		pqb := r.Performer()
-		tqb := r.Tag()
+	if s.Studio != nil {
+		scrapedStudio := studioFragmentToScrapedSceneStudio(s.Studio)
 
-		if s.Studio != nil {
-			studioID := s.Studio.ID
-			ss.Studio = &models.ScrapedSceneStudio{
-				Name:         s.Studio.Name,
-				URL:          findURL(s.Studio.Urls, "HOME"),
-				RemoteSiteID: &studioID,
-			}
+		studio, err := c.matchScrapedSceneStudio(s.Studio)
+		if err != nil {
+			return nil, err
+		}
+		if studio != nil {
+			id := strconv.Itoa(studio.ID)
+			scrapedStudio.ID = &id
+		}
+		ss.Studio = scrapedStudio
+	}
 
-			err := scraper.MatchScrapedSceneStudio(r.Studio(), ss.Studio)
-			if err != nil {
-				return err
-			}
+	for _, p := range s.Performers {
+		sp := performerFragmentToScrapedScenePerformer(p.Performer)
+
+		performer, err := c.matchScrapedScenePerformer(p.Performer)
+		if err != nil {
+			return nil, err
+		}
+		if performer != nil {
+			id := strconv.Itoa(performer.ID)
+			sp.ID = &id
+		}
+		ss.Performers = append(ss.Performers, sp)
+	}
+
+	for _, t := range s.Tags {
+		st := &models.ScrapedSceneTag{
+			Name: t.Name,
 		}
 
-		for _, p := range s.Performers {
-			sp := performerFragmentToScrapedScenePerformer(p.Performer)
-
-			err := scraper.MatchScrapedScenePerformer(pqb, sp)
-			if err != nil {
-				return err
-			}
-
-			ss.Performers = append(ss.Performers, sp)
+		if err := c.txnManager.WithTxn(context.TODO(), func(r models.Repository) error {
+			return scraper.MatchScrapedSceneTag(r.Tag(), st)
+		}); err != nil {
+			return nil, err
 		}
 
-		for _, t := range s.Tags {
-			st := &models.ScrapedSceneTag{
-				Name: t.Name,
-			}
-
-			err := scraper.MatchScrapedSceneTag(tqb, st)
-			if err != nil {
-				return err
-			}
-
-			ss.Tags = append(ss.Tags, st)
-		}
-
-		return nil
-	}); err != nil {
-		return nil, err
+		ss.Tags = append(ss.Tags, st)
 	}
 
 	return ss, nil
@@ -579,4 +594,156 @@ func (c Client) FindStashBoxPerformerByName(name string) (*models.ScrapedScenePe
 	}
 
 	return ret, nil
+}
+
+func (c Client) FindStashBoxSceneByID(id string) (*models.ScrapedScene, error) {
+	scene, err := c.client.FindSceneByID(context.TODO(), id)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.sceneFragmentToScrapedScene(scene.FindScene)
+}
+
+func (c Client) matchScrapedScenePerformer(fragment graphql.PerformerFragment) (*models.Performer, error) {
+	var err error
+	var performers []*models.Performer
+	if err := c.txnManager.WithTxn(context.TODO(), func(r models.Repository) error {
+		pqb := r.Performer()
+		performers, err = pqb.FindByStashID(fragment.ID, c.endpoint)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	if len(performers) == 0 {
+		// Check if the performer exists with an old, merged id.
+		// If that is the case, replace the old with the new id.
+		if err := c.txnManager.WithTxn(context.TODO(), func(r models.Repository) error {
+			pqb := r.Performer()
+			for _, mergedID := range fragment.MergedIds {
+				performers, err = pqb.FindByStashID(mergedID, c.endpoint)
+				if err != nil {
+					return err
+				}
+
+				if len(performers) > 0 {
+					for _, performer := range performers {
+						stashIDs, err := pqb.GetStashIDs(performer.ID)
+						if err != nil {
+							return err
+						}
+						newStashIDs := []models.StashID{{
+							StashID:  fragment.ID,
+							Endpoint: c.endpoint,
+						}}
+						for _, stashID := range stashIDs {
+							if stashID.StashID != mergedID || stashID.Endpoint != c.endpoint {
+								newStashIDs = append(newStashIDs, *stashID)
+							}
+						}
+						pqb.UpdateStashIDs(performer.ID, newStashIDs)
+					}
+					return nil
+				}
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	if len(performers) == 0 {
+		// Check if performer with the same name already exists.
+		if err := c.txnManager.WithTxn(context.TODO(), func(r models.Repository) error {
+			pqb := r.Performer()
+			performers, err = pqb.FindByNames([]string{fragment.Name}, true)
+			if err != nil {
+				return err
+			}
+			if len(performers) == 1 {
+				stashIDs, err := pqb.GetStashIDs(performers[0].ID)
+				if err != nil {
+					return err
+				}
+				newStashIDs := []models.StashID{{
+					StashID:  fragment.ID,
+					Endpoint: c.endpoint,
+				}}
+				for _, stashID := range stashIDs {
+					newStashIDs = append(newStashIDs, *stashID)
+				}
+				pqb.UpdateStashIDs(performers[0].ID, newStashIDs)
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	if len(performers) == 1 {
+		return performers[0], nil
+	} else if len(performers) > 1 {
+		var ids []int
+		for _, p := range performers {
+			ids = append(ids, p.ID)
+		}
+		logger.Errorf("Multiple performers with same stashID found: %v", ids)
+		return performers[0], nil
+	}
+
+	return nil, nil
+}
+
+func (c Client) matchScrapedSceneStudio(fragment *graphql.StudioFragment) (*models.Studio, error) {
+	var err error
+	var studios []*models.Studio
+	if err := c.txnManager.WithTxn(context.TODO(), func(r models.Repository) error {
+		studios, err = r.Studio().FindByStashID(fragment.ID, c.endpoint)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	if len(studios) == 0 {
+		// Check if studio with the same name already exists.
+		if err := c.txnManager.WithTxn(context.TODO(), func(r models.Repository) error {
+			sqb := r.Studio()
+			studio, err := sqb.FindByName(fragment.Name, true)
+			if err != nil {
+				return err
+			}
+			if studio != nil {
+				stashIDs, err := sqb.GetStashIDs(studio.ID)
+				if err != nil {
+					return err
+				}
+				newStashIDs := []models.StashID{{
+					StashID:  fragment.ID,
+					Endpoint: c.endpoint,
+				}}
+				for _, stashID := range stashIDs {
+					newStashIDs = append(newStashIDs, *stashID)
+				}
+				sqb.UpdateStashIDs(studio.ID, newStashIDs)
+
+			}
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	if len(studios) == 1 {
+		return studios[0], nil
+	} else if len(studios) > 1 {
+		var ids []int
+		for _, s := range studios {
+			ids = append(ids, s.ID)
+		}
+		logger.Errorf("Multiple studios with same stashID found: %v", ids)
+		return studios[0], nil
+	}
+
+	return nil, nil
 }

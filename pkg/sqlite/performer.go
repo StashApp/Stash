@@ -622,3 +622,13 @@ func (qb *performerQueryBuilder) FindByStashIDStatus(hasStashID bool, stashboxEn
 	args := []interface{}{stashboxEndpoint}
 	return qb.queryPerformers(query, args)
 }
+
+func (qb *performerQueryBuilder) FindByStashID(stashID string, stashboxEndpoint string) ([]*models.Performer, error) {
+	query := selectAll("performers") + `
+		JOIN performer_stash_ids as stashid_join on stashid_join.performer_id = performers.id
+		WHERE stashid_join.stash_id = ?
+		AND stashid_join.endpoint = ?
+	`
+	args := []interface{}{stashID, stashboxEndpoint}
+	return qb.queryPerformers(query, args)
+}

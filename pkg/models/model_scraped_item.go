@@ -148,6 +148,7 @@ type ScrapedSceneStudio struct {
 	Name         string  `graphql:"name" json:"name"`
 	URL          *string `graphql:"url" json:"url"`
 	RemoteSiteID *string `graphql:"remote_site_id" json:"remote_site_id"`
+	Image        *string `graphql:"image" json:"image"`
 }
 
 type ScrapedSceneMovie struct {
