@@ -179,3 +179,54 @@ func EnsureUniqueHierarchy(id int, parentIDs, childIDs []int, qb models.TagReade
 
 	return nil
 }
+
+func MergeHierarchy(destination int, sources []int, qb models.TagReader) ([]int, []int, error) {
+	var mergedParents, mergedChildren []int
+	allIds := append([]int{destination}, sources...)
+
+	addTo := func(mergedItems []int, tags []*models.Tag) []int {
+	Tags:
+		for _, tag := range tags {
+			// Ignore tags which are already set
+			for _, existingItem := range mergedItems {
+				if tag.ID == existingItem {
+					continue Tags
+				}
+			}
+
+			// Ignore tags which are being merged, as these are rolled up anyway (if A is merged into B any direct link between them can be ignored)
+			for _, id := range allIds {
+				if tag.ID == id {
+					continue Tags
+				}
+			}
+
+			mergedItems = append(mergedItems, tag.ID)
+		}
+
+		return mergedItems
+	}
+
+	for _, id := range allIds {
+		parents, err := qb.FindByChildTagID(id)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		mergedParents = addTo(mergedParents, parents)
+
+		children, err := qb.FindByParentTagID(id)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		mergedChildren = addTo(mergedChildren, children)
+	}
+
+	err := EnsureUniqueHierarchy(destination, mergedParents, mergedChildren, qb)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return mergedParents, mergedChildren, nil
+}

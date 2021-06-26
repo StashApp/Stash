@@ -299,7 +299,21 @@ func (r *mutationResolver) TagsMerge(ctx context.Context, input models.TagsMerge
 			return fmt.Errorf("Tag with ID %d not found", destination)
 		}
 
+		parents, children, err := tag.MergeHierarchy(destination, source, qb)
+		if err != nil {
+			return err
+		}
+
 		if err = qb.Merge(source, destination); err != nil {
+			return err
+		}
+
+		err = qb.UpdateParentTags(destination, parents)
+		if err != nil {
+			return err
+		}
+		err = qb.UpdateChildTags(destination, children)
+		if err != nil {
 			return err
 		}
 
