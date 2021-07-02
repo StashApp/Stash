@@ -10,7 +10,7 @@ import {
 } from "src/core/StashService";
 import { useToast } from "src/hooks";
 import { TextUtils } from "src/utils";
-import { Icon, LoadingIndicator } from "src/components/Shared";
+import { CollapseButton, Icon, LoadingIndicator } from "src/components/Shared";
 import { ScrapeType } from "src/core/generated-graphql";
 
 interface IURLList {
@@ -271,8 +271,7 @@ export const SettingsScrapersPanel: React.FC = () => {
   function renderTable(title: string, elements: JSX.Element[]) {
     if (elements.length > 0) {
       return (
-        <div className="mb-2">
-          <h5>{title}</h5>
+        <CollapseButton text={title}>
           <table className="scraper-table">
             <thead>
               <tr>
@@ -289,7 +288,7 @@ export const SettingsScrapersPanel: React.FC = () => {
             </thead>
             <tbody>{elements}</tbody>
           </table>
-        </div>
+        </CollapseButton>
       );
     }
   }
