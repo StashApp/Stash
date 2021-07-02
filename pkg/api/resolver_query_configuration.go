@@ -39,6 +39,7 @@ func makeConfigResult() *models.ConfigResult {
 		General:   makeConfigGeneralResult(),
 		Interface: makeConfigInterfaceResult(),
 		Dlna:      makeConfigDLNAResult(),
+		Scraping:  makeConfigScrapingResult(),
 	}
 }
 
@@ -48,9 +49,6 @@ func makeConfigGeneralResult() *models.ConfigGeneralResult {
 
 	maxTranscodeSize := config.GetMaxTranscodeSize()
 	maxStreamingTranscodeSize := config.GetMaxStreamingTranscodeSize()
-
-	scraperUserAgent := config.GetScraperUserAgent()
-	scraperCDPPath := config.GetScraperCDPPath()
 
 	return &models.ConfigGeneralResult{
 		Stashes:                    config.GetStashPaths(),
@@ -84,9 +82,6 @@ func makeConfigGeneralResult() *models.ConfigGeneralResult {
 		CreateGalleriesFromFolders: config.GetCreateGalleriesFromFolders(),
 		Excludes:                   config.GetExcludes(),
 		ImageExcludes:              config.GetImageExcludes(),
-		ScraperUserAgent:           &scraperUserAgent,
-		ScraperCertCheck:           config.GetScraperCertCheck(),
-		ScraperCDPPath:             &scraperCDPPath,
 		StashBoxes:                 config.GetStashBoxes(),
 	}
 }
@@ -130,5 +125,18 @@ func makeConfigDLNAResult() *models.ConfigDLNAResult {
 		Enabled:        config.GetDLNADefaultEnabled(),
 		WhitelistedIPs: config.GetDLNADefaultIPWhitelist(),
 		Interfaces:     config.GetDLNAInterfaces(),
+	}
+}
+
+func makeConfigScrapingResult() *models.ConfigScrapingResult {
+	config := config.GetInstance()
+
+	scraperUserAgent := config.GetScraperUserAgent()
+	scraperCDPPath := config.GetScraperCDPPath()
+
+	return &models.ConfigScrapingResult{
+		ScraperUserAgent: &scraperUserAgent,
+		ScraperCertCheck: config.GetScraperCertCheck(),
+		ScraperCDPPath:   &scraperCDPPath,
 	}
 }

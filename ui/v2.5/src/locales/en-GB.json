@@ -151,7 +151,7 @@
       "interface": "Interface",
       "logs": "Logs",
       "plugins": "Plugins",
-      "scrapers": "Scrapers",
+      "scraping": "Scraping",
       "tasks": "Tasks",
       "tools": "Tools"
     },
@@ -240,9 +240,10 @@
       "hooks": "Hooks",
       "triggers_on": "Triggers on"
     },
-    "scrapers": {
+    "scraping": {
       "entity_metadata": "{entityType} Metadata",
       "entity_scrapers": "{entityType} scrapers",
+      "scrapers": "Scrapers",
       "search_by_name": "Search by name",
       "supported_types": "Supported types",
       "supported_urls": "URLs"

@@ -126,13 +126,6 @@ export const SettingsConfigurationPanel: React.FC = () => {
 
   const [excludes, setExcludes] = useState<string[]>([]);
   const [imageExcludes, setImageExcludes] = useState<string[]>([]);
-  const [scraperUserAgent, setScraperUserAgent] = useState<string | undefined>(
-    undefined
-  );
-  const [scraperCDPPath, setScraperCDPPath] = useState<string | undefined>(
-    undefined
-  );
-  const [scraperCertCheck, setScraperCertCheck] = useState<boolean>(true);
   const [stashBoxes, setStashBoxes] = useState<IStashBoxInstance[]>([]);
 
   const { data, error, loading } = useConfiguration();
@@ -173,9 +166,6 @@ export const SettingsConfigurationPanel: React.FC = () => {
     galleryExtensions: commaDelimitedToList(galleryExtensions),
     excludes,
     imageExcludes,
-    scraperUserAgent,
-    scraperCDPPath,
-    scraperCertCheck,
     stashBoxes: stashBoxes.map(
       (b) =>
         ({
@@ -223,9 +213,6 @@ export const SettingsConfigurationPanel: React.FC = () => {
       );
       setExcludes(conf.general.excludes);
       setImageExcludes(conf.general.imageExcludes);
-      setScraperUserAgent(conf.general.scraperUserAgent ?? undefined);
-      setScraperCDPPath(conf.general.scraperCDPPath ?? undefined);
-      setScraperCertCheck(conf.general.scraperCertCheck);
       setStashBoxes(
         conf.general.stashBoxes.map((box, i) => ({
           name: box?.name ?? undefined,
@@ -825,59 +812,6 @@ export const SettingsConfigurationPanel: React.FC = () => {
           <Form.Text className="text-muted">
             {intl.formatMessage({
               id: "dialogs.scene_gen.preview_exclude_end_time_desc",
-            })}
-          </Form.Text>
-        </Form.Group>
-      </Form.Group>
-
-      <Form.Group>
-        <h4>{intl.formatMessage({ id: "config.general.scraping" })}</h4>
-        <Form.Group id="scraperUserAgent">
-          <h6>
-            {intl.formatMessage({ id: "config.general.scraper_user_agent" })}
-          </h6>
-          <Form.Control
-            className="col col-sm-6 text-input"
-            defaultValue={scraperUserAgent}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setScraperUserAgent(e.currentTarget.value)
-            }
-          />
-          <Form.Text className="text-muted">
-            {intl.formatMessage({
-              id: "config.general.scraper_user_agent_desc",
-            })}
-          </Form.Text>
-        </Form.Group>
-
-        <Form.Group id="scraperCDPPath">
-          <h6>
-            {intl.formatMessage({ id: "config.general.chrome_cdp_path" })}
-          </h6>
-          <Form.Control
-            className="col col-sm-6 text-input"
-            defaultValue={scraperCDPPath}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setScraperCDPPath(e.currentTarget.value)
-            }
-          />
-          <Form.Text className="text-muted">
-            {intl.formatMessage({ id: "config.general.chrome_cdp_path_desc" })}
-          </Form.Text>
-        </Form.Group>
-
-        <Form.Group>
-          <Form.Check
-            id="scaper-cert-check"
-            checked={scraperCertCheck}
-            label={intl.formatMessage({
-              id: "config.general.check_for_insecure_certificates",
-            })}
-            onChange={() => setScraperCertCheck(!scraperCertCheck)}
-          />
-          <Form.Text className="text-muted">
-            {intl.formatMessage({
-              id: "config.general.check_for_insecure_certificates_desc",
             })}
           </Form.Text>
         </Form.Group>

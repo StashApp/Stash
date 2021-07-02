@@ -761,6 +761,13 @@ export const useRemoveTempDLNAIP = () => GQL.useRemoveTempDlnaipMutation();
 
 export const useLoggingSubscribe = () => GQL.useLoggingSubscribeSubscription();
 
+export const useConfigureScraping = (input: GQL.ConfigScrapingInput) =>
+  GQL.useConfigureScrapingMutation({
+    variables: { input },
+    refetchQueries: getQueryNames([GQL.ConfigurationDocument]),
+    update: deleteCache([GQL.ConfigurationDocument]),
+  });
+
 export const querySystemStatus = () =>
   client.query<GQL.SystemStatusQuery>({
     query: GQL.SystemStatusDocument,

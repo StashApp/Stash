@@ -89,12 +89,6 @@ input ConfigGeneralInput {
   excludes: [String!]
   """Array of file regexp to exclude from Image Scans"""
   imageExcludes: [String!]
-  """Scraper user agent string"""
-  scraperUserAgent: String
-  """Scraper CDP path. Path to chrome executable or remote address"""
-  scraperCDPPath: String
-  """Whether the scraper should check for invalid certificates"""
-  scraperCertCheck: Boolean!
   """Stash-box instances used for tagging"""
   stashBoxes: [StashBoxInput!]!
 }
@@ -162,12 +156,6 @@ type ConfigGeneralResult {
   excludes: [String!]!
   """Array of file regexp to exclude from Image Scans"""
   imageExcludes: [String!]!
-  """Scraper user agent string"""
-  scraperUserAgent: String
-  """Scraper CDP path. Path to chrome executable or remote address"""
-  scraperCDPPath: String
-  """Whether the scraper should check for invalid certificates"""
-  scraperCertCheck: Boolean!
   """Stash-box instances used for tagging"""
   stashBoxes: [StashBox!]!
 }
@@ -244,11 +232,30 @@ type ConfigDLNAResult {
   interfaces: [String!]!
 }
 
+input ConfigScrapingInput {
+  """Scraper user agent string"""
+  scraperUserAgent: String
+  """Scraper CDP path. Path to chrome executable or remote address"""
+  scraperCDPPath: String
+  """Whether the scraper should check for invalid certificates"""
+  scraperCertCheck: Boolean!
+}
+
+type ConfigScrapingResult {
+  """Scraper user agent string"""
+  scraperUserAgent: String
+  """Scraper CDP path. Path to chrome executable or remote address"""
+  scraperCDPPath: String
+  """Whether the scraper should check for invalid certificates"""
+  scraperCertCheck: Boolean!
+}
+
 """All configuration settings"""
 type ConfigResult {
   general: ConfigGeneralResult!
   interface: ConfigInterfaceResult!
   dlna: ConfigDLNAResult!
+  scraping: ConfigScrapingResult!
 }
 
 """Directory structure of a path"""

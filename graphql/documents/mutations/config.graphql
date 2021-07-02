@@ -24,6 +24,12 @@ mutation ConfigureDLNA($input: ConfigDLNAInput!) {
   }
 }
 
+mutation ConfigureScraping($input: ConfigScrapingInput!) {
+  configureScraping(input: $input) {
+    ...ConfigScrapingData
+  }
+}
+
 mutation GenerateAPIKey($input: GenerateAPIKeyInput!) {
   generateAPIKey(input: $input)
 }
