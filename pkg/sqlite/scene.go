@@ -461,38 +461,10 @@ func phashCriterionHandler(phashFilter *models.StringCriterionInput) criterionHa
 func durationCriterionHandler(durationFilter *models.IntCriterionInput, column string) criterionHandlerFunc {
 	return func(f *filterBuilder) {
 		if durationFilter != nil {
-			clause, thisArgs := getDurationWhereClause(*durationFilter, column)
-			f.addWhere(clause, thisArgs...)
+			clause, args := getIntCriterionWhereClause("cast("+column+" as int)", *durationFilter)
+			f.addWhere(clause, args...)
 		}
 	}
-}
-
-func getDurationWhereClause(durationFilter models.IntCriterionInput, column string) (string, []interface{}) {
-	// special case for duration. We accept duration as seconds as int but the
-	// field is floating point. Change the equals filter to return a range
-	// between x and x + 1
-	// likewise, not equals needs to be duration < x OR duration >= x
-	var clause string
-	args := []interface{}{}
-
-	value := durationFilter.Value
-	if durationFilter.Modifier == models.CriterionModifierEquals {
-		clause = fmt.Sprintf("%[1]s >= ? AND %[1]s < ?", column)
-		args = append(args, value)
-		args = append(args, value+1)
-	} else if durationFilter.Modifier == models.CriterionModifierNotEquals {
-		clause = fmt.Sprintf("(%[1]s < ? OR %[1]s >= ?)", column)
-		args = append(args, value)
-		args = append(args, value+1)
-	} else {
-		var count int
-		clause, count = getIntCriterionWhereClause(column, durationFilter)
-		if count == 1 {
-			args = append(args, value)
-		}
-	}
-
-	return clause, args
 }
 
 func resolutionCriterionHandler(resolution *models.ResolutionEnum, heightColumn string, widthColumn string) criterionHandlerFunc {

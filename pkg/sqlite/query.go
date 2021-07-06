@@ -135,11 +135,9 @@ func (qb *queryBuilder) addFilter(f *filterBuilder) {
 
 func (qb *queryBuilder) handleIntCriterionInput(c *models.IntCriterionInput, column string) {
 	if c != nil {
-		clause, count := getIntCriterionWhereClause(column, *c)
+		clause, args := getIntCriterionWhereClause(column, *c)
 		qb.addWhere(clause)
-		if count == 1 {
-			qb.addArg(c.Value)
-		}
+		qb.addArg(args...)
 	}
 }
 
@@ -192,12 +190,9 @@ func (qb *queryBuilder) handleStringCriterionInput(c *models.StringCriterionInpu
 
 func (qb *queryBuilder) handleCountCriterion(countFilter *models.IntCriterionInput, primaryTable, joinTable, primaryFK string) {
 	if countFilter != nil {
-		clause, count := getCountCriterionClause(primaryTable, joinTable, primaryFK, *countFilter)
-
-		if count == 1 {
-			qb.addArg(countFilter.Value)
-		}
+		clause, args := getCountCriterionClause(primaryTable, joinTable, primaryFK, *countFilter)
 
 		qb.addWhere(clause)
+		qb.addArg(args...)
 	}
 }

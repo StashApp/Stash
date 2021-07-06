@@ -3,7 +3,6 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/stashapp/stash/pkg/models"
@@ -356,25 +355,8 @@ func performerIsMissingCriterionHandler(qb *performerQueryBuilder, isMissing *st
 func yearFilterCriterionHandler(year *models.IntCriterionInput, col string) criterionHandlerFunc {
 	return func(f *filterBuilder) {
 		if year != nil && year.Modifier.IsValid() {
-			yearStr := strconv.Itoa(year.Value)
-			startOfYear := yearStr + "-01-01"
-			endOfYear := yearStr + "-12-31"
-
-			switch year.Modifier {
-			case models.CriterionModifierEquals:
-				// between yyyy-01-01 and yyyy-12-31
-				f.addWhere(col+" >= ?", startOfYear)
-				f.addWhere(col+" <= ?", endOfYear)
-			case models.CriterionModifierNotEquals:
-				// outside of yyyy-01-01 to yyyy-12-31
-				f.addWhere(col+" < ? OR "+col+" > ?", startOfYear, endOfYear)
-			case models.CriterionModifierGreaterThan:
-				// > yyyy-12-31
-				f.addWhere(col+" > ?", endOfYear)
-			case models.CriterionModifierLessThan:
-				// < yyyy-01-01
-				f.addWhere(col+" < ?", startOfYear)
-			}
+			clause, args := getIntCriterionWhereClause("cast(strftime('%Y', "+col+") as int)", *year)
+			f.addWhere(clause, args...)
 		}
 	}
 }
@@ -382,22 +364,11 @@ func yearFilterCriterionHandler(year *models.IntCriterionInput, col string) crit
 func performerAgeFilterCriterionHandler(age *models.IntCriterionInput) criterionHandlerFunc {
 	return func(f *filterBuilder) {
 		if age != nil && age.Modifier.IsValid() {
-			var op string
-
-			switch age.Modifier {
-			case models.CriterionModifierEquals:
-				op = "=="
-			case models.CriterionModifierNotEquals:
-				op = "!="
-			case models.CriterionModifierGreaterThan:
-				op = ">"
-			case models.CriterionModifierLessThan:
-				op = "<"
-			}
-
-			if op != "" {
-				f.addWhere("cast(IFNULL(strftime('%Y.%m%d', performers.death_date), strftime('%Y.%m%d', 'now')) - strftime('%Y.%m%d', performers.birthdate) as int) "+op+" ?", age.Value)
-			}
+			clause, args := getIntCriterionWhereClause(
+				"cast(IFNULL(strftime('%Y.%m%d', performers.death_date), strftime('%Y.%m%d', 'now')) - strftime('%Y.%m%d', performers.birthdate) as int)",
+				*age,
+			)
+			f.addWhere(clause, args...)
 		}
 	}
 }

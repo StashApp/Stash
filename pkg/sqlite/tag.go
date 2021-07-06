@@ -379,12 +379,7 @@ func tagSceneCountCriterionHandler(qb *tagQueryBuilder, sceneCount *models.IntCr
 	return func(f *filterBuilder) {
 		if sceneCount != nil {
 			f.addJoin("scenes_tags", "", "scenes_tags.tag_id = tags.id")
-			clause, count := getIntCriterionWhereClause("count(distinct scenes_tags.scene_id)", *sceneCount)
-
-			args := []interface{}{}
-			if count == 1 {
-				args = append(args, sceneCount.Value)
-			}
+			clause, args := getIntCriterionWhereClause("count(distinct scenes_tags.scene_id)", *sceneCount)
 
 			f.addHaving(clause, args...)
 		}
@@ -395,12 +390,7 @@ func tagImageCountCriterionHandler(qb *tagQueryBuilder, imageCount *models.IntCr
 	return func(f *filterBuilder) {
 		if imageCount != nil {
 			f.addJoin("images_tags", "", "images_tags.tag_id = tags.id")
-			clause, count := getIntCriterionWhereClause("count(distinct images_tags.image_id)", *imageCount)
-
-			args := []interface{}{}
-			if count == 1 {
-				args = append(args, imageCount.Value)
-			}
+			clause, args := getIntCriterionWhereClause("count(distinct images_tags.image_id)", *imageCount)
 
 			f.addHaving(clause, args...)
 		}
@@ -411,12 +401,7 @@ func tagGalleryCountCriterionHandler(qb *tagQueryBuilder, galleryCount *models.I
 	return func(f *filterBuilder) {
 		if galleryCount != nil {
 			f.addJoin("galleries_tags", "", "galleries_tags.tag_id = tags.id")
-			clause, count := getIntCriterionWhereClause("count(distinct galleries_tags.gallery_id)", *galleryCount)
-
-			args := []interface{}{}
-			if count == 1 {
-				args = append(args, galleryCount.Value)
-			}
+			clause, args := getIntCriterionWhereClause("count(distinct galleries_tags.gallery_id)", *galleryCount)
 
 			f.addHaving(clause, args...)
 		}
@@ -427,12 +412,7 @@ func tagPerformerCountCriterionHandler(qb *tagQueryBuilder, performerCount *mode
 	return func(f *filterBuilder) {
 		if performerCount != nil {
 			f.addJoin("performers_tags", "", "performers_tags.tag_id = tags.id")
-			clause, count := getIntCriterionWhereClause("count(distinct performers_tags.performer_id)", *performerCount)
-
-			args := []interface{}{}
-			if count == 1 {
-				args = append(args, performerCount.Value)
-			}
+			clause, args := getIntCriterionWhereClause("count(distinct performers_tags.performer_id)", *performerCount)
 
 			f.addHaving(clause, args...)
 		}

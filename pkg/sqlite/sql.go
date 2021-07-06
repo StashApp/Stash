@@ -160,7 +160,7 @@ func getCriterionModifierBinding(criterionModifier models.CriterionModifier, val
 	}
 	if modifier := criterionModifier.String(); criterionModifier.IsValid() {
 		switch modifier {
-		case "EQUALS", "NOT_EQUALS", "GREATER_THAN", "LESS_THAN", "IS_NULL", "NOT_NULL":
+		case "EQUALS", "NOT_EQUALS", "GREATER_THAN", "LESS_THAN", "IS_NULL", "NOT_NULL", "BETWEEN", "NOT_BETWEEN":
 			return getSimpleCriterionClause(criterionModifier, "?")
 		case "INCLUDES":
 			return "IN " + getInBinding(length), length // TODO?
@@ -189,6 +189,11 @@ func getSimpleCriterionClause(criterionModifier models.CriterionModifier, rhs st
 			return "IS NULL", 0
 		case "NOT_NULL":
 			return "IS NOT NULL", 0
+		case "BETWEEN":
+			// Make BETWEEN behave exclusive, same as there are also exclusive greater / less than modifiers
+			return "BETWEEN (" + rhs + " + 1) AND (" + rhs + " - 1)", 2
+		case "NOT_BETWEEN":
+			return "NOT BETWEEN (" + rhs + " + 1) AND (" + rhs + " - 1)", 2
 		default:
 			logger.Errorf("todo")
 			return "= ?", 1 // TODO
@@ -198,9 +203,26 @@ func getSimpleCriterionClause(criterionModifier models.CriterionModifier, rhs st
 	return "= ?", 1 // TODO
 }
 
-func getIntCriterionWhereClause(column string, input models.IntCriterionInput) (string, int) {
-	binding, count := getCriterionModifierBinding(input.Modifier, input.Value)
-	return column + " " + binding, count
+func getIntCriterionWhereClause(column string, input models.IntCriterionInput) (string, []interface{}) {
+	binding, _ := getSimpleCriterionClause(input.Modifier, "?")
+	var args []interface{}
+
+	switch input.Modifier {
+	case "EQUALS", "NOT_EQUALS":
+		args = []interface{}{input.Exact}
+		break
+	case "LESS_THAN":
+		args = []interface{}{input.Upper}
+		break
+	case "GREATER_THAN":
+		args = []interface{}{input.Lower}
+		break
+	case "BETWEEN", "NOT_BETWEEN":
+		args = []interface{}{input.Lower, input.Upper}
+		break
+	}
+
+	return column + " " + binding, args
 }
 
 // returns where clause and having clause
@@ -226,7 +248,7 @@ func getMultiCriterionClause(primaryTable, foreignTable, joinTable, primaryFK, f
 	return whereClause, havingClause
 }
 
-func getCountCriterionClause(primaryTable, joinTable, primaryFK string, criterion models.IntCriterionInput) (string, int) {
+func getCountCriterionClause(primaryTable, joinTable, primaryFK string, criterion models.IntCriterionInput) (string, []interface{}) {
 	lhs := fmt.Sprintf("(SELECT COUNT(*) FROM %s s WHERE s.%s = %s.id)", joinTable, primaryFK, primaryTable)
 	return getIntCriterionWhereClause(lhs, criterion)
 }

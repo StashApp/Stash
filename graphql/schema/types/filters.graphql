@@ -322,6 +322,10 @@ enum CriterionModifier {
   MATCHES_REGEX,
   """NOT MATCHES REGEX"""
   NOT_MATCHES_REGEX,
+  """> AND <"""
+  BETWEEN,
+  """<= OR >="""
+  NOT_BETWEEN,
 }
 
 input StringCriterionInput {
@@ -330,7 +334,9 @@ input StringCriterionInput {
 }
 
 input IntCriterionInput {
-  value: Int!
+  exact: Int!
+  lower: Int!
+  upper: Int!
   modifier: CriterionModifier!
 }
 

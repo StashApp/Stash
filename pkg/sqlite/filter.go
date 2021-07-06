@@ -368,13 +368,8 @@ func stringCriterionHandler(c *models.StringCriterionInput, column string) crite
 func intCriterionHandler(c *models.IntCriterionInput, column string) criterionHandlerFunc {
 	return func(f *filterBuilder) {
 		if c != nil {
-			clause, count := getIntCriterionWhereClause(column, *c)
-
-			if count == 1 {
-				f.addWhere(clause, c.Value)
-			} else {
-				f.addWhere(clause)
-			}
+			clause, args := getIntCriterionWhereClause(column, *c)
+			f.addWhere(clause, args...)
 		}
 	}
 }
@@ -495,13 +490,9 @@ type countCriterionHandlerBuilder struct {
 func (m *countCriterionHandlerBuilder) handler(criterion *models.IntCriterionInput) criterionHandlerFunc {
 	return func(f *filterBuilder) {
 		if criterion != nil {
-			clause, count := getCountCriterionClause(m.primaryTable, m.joinTable, m.primaryFK, *criterion)
+			clause, args := getCountCriterionClause(m.primaryTable, m.joinTable, m.primaryFK, *criterion)
 
-			if count == 1 {
-				f.addWhere(clause, criterion.Value)
-			} else {
-				f.addWhere(clause)
-			}
+			f.addWhere(clause, args...)
 		}
 	}
 }

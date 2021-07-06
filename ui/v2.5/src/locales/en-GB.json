@@ -381,7 +381,9 @@
     "matches_regex": "matches regex",
     "not_equals": "is not",
     "not_matches_regex": "not matches regex",
-    "not_null": "is not null"
+    "not_null": "is not null",
+    "between": "between",
+    "not_between": "not between"
   },
   "date": "Date",
   "death_date": "Death Date",
