@@ -1,7 +1,6 @@
 import _ from "lodash";
 import React, { useEffect, useRef, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
-import { FilterSelect, DurationInput } from "src/components/Shared";
 import { CriterionModifier } from "src/core/generated-graphql";
 import {
   DurationCriterion,
@@ -9,6 +8,7 @@ import {
   Criterion,
   IHierarchicalLabeledIdCriterion,
   NumberCriterion,
+  ILabeledIdCriterion,
 } from "src/models/list-filter/criteria/criterion";
 import {
   NoneCriterion,
@@ -16,12 +16,18 @@ import {
 } from "src/models/list-filter/criteria/none";
 import { makeCriteria } from "src/models/list-filter/criteria/factory";
 import { ListFilterOptions } from "src/models/list-filter/filter-options";
-import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import {
   criterionIsHierarchicalLabelValue,
   criterionIsNumberValue,
   CriterionType,
 } from "src/models/list-filter/types";
+import { DurationFilter } from "./Filters/DurationFilter";
+import { NumberFilter } from "./Filters/NumberFilter";
+import { LabeledIdFilter } from "./Filters/LabeledIdFilter";
+import { HierarchicalLabelValueFilter } from "./Filters/HierarchicalLabelValueFilter";
+import { OptionsFilter } from "./Filters/OptionsFilter";
+import { InputFilter } from "./Filters/InputFilter";
 
 interface IAddFilterProps {
   onAddCriterion: (
@@ -50,13 +56,6 @@ export const AddFilterDialog: React.FC<IAddFilterProps> = ({
 
   const intl = useIntl();
 
-  const messages = defineMessages({
-    studio_depth: {
-      id: "studio_depth",
-      defaultMessage: "Levels (empty for all)",
-    },
-  });
-
   // Configure if we are editing an existing criterion
   useEffect(() => {
     if (!editingCriterion) {
@@ -84,65 +83,13 @@ export const AddFilterDialog: React.FC<IAddFilterProps> = ({
     setCriterion(newCriterion);
   }
 
-  function onChangedSingleSelect(event: React.ChangeEvent<HTMLSelectElement>) {
+  function onValueChanged(value: CriterionValue) {
     const newCriterion = _.cloneDeep(criterion);
-    newCriterion.value = event.target.value;
-    setCriterion(newCriterion);
-  }
-
-  function onChangedInput(event: React.ChangeEvent<HTMLInputElement>) {
-    valueStage.current = event.target.value;
-  }
-
-  function onNumberChanged(
-    event: React.ChangeEvent<HTMLInputElement>,
-    property: "exact" | "lower" | "upper"
-  ) {
-    const value = parseInt(event.target.value, 10);
-
-    if (!criterionIsNumberValue(valueStage.current)) {
-      valueStage.current = { exact: 0, upper: 0, lower: 0 };
-    }
-
-    valueStage.current[property] = value;
-  }
-
-  function onChangedDuration(
-    valueAsNumber: number,
-    property: "exact" | "lower" | "upper"
-  ) {
-    if (!criterionIsNumberValue(valueStage.current)) {
-      valueStage.current = { exact: 0, upper: 0, lower: 0 };
-    }
-
-    valueStage.current[property] = valueAsNumber;
-    onBlurInput();
-  }
-
-  function onBlurInput() {
-    const newCriterion = _.cloneDeep(criterion);
-    newCriterion.value = valueStage.current;
+    newCriterion.value = value;
     setCriterion(newCriterion);
   }
 
   function onAddFilter() {
-    if (!Array.isArray(criterion.value) && defaultValue.current !== undefined) {
-      const value = defaultValue.current;
-      if (
-        options &&
-        (value === undefined || value === "" || typeof value === "number")
-      ) {
-        criterion.value = options[0].toString();
-      } else if (
-        (criterion instanceof NumberCriterion ||
-          criterion instanceof DurationCriterion) &&
-        value === undefined
-      ) {
-        criterion.value = { exact: 0, lower: 0, upper: 0 };
-      } else if (value === undefined) {
-        criterion.value = "";
-      }
-    }
     const oldId = editingCriterion ? editingCriterion.getId() : undefined;
     onAddCriterion(criterion, oldId);
   }
@@ -181,268 +128,57 @@ export const AddFilterDialog: React.FC<IAddFilterProps> = ({
         return;
       }
 
-      if (Array.isArray(criterion.value)) {
-        if (
-          criterion.criterionOption.type !== "performers" &&
-          criterion.criterionOption.type !== "studios" &&
-          criterion.criterionOption.type !== "parent_studios" &&
-          criterion.criterionOption.type !== "tags" &&
-          criterion.criterionOption.type !== "sceneTags" &&
-          criterion.criterionOption.type !== "performerTags" &&
-          criterion.criterionOption.type !== "movies"
-        )
-          return;
-
+      if (criterion instanceof ILabeledIdCriterion) {
         return (
-          <Form.Group>
-            <FilterSelect
-              type={criterion.criterionOption.type}
-              isMulti
-              onSelect={(items) => {
-                const newCriterion = _.cloneDeep(criterion);
-                newCriterion.value = items.map((i) => ({
-                  id: i.id,
-                  label: i.name!,
-                }));
-                setCriterion(newCriterion);
-              }}
-              ids={criterion.value.map((labeled) => labeled.id)}
-            />
-          </Form.Group>
+          <LabeledIdFilter
+            criterion={criterion}
+            onValueChanged={onValueChanged}
+          />
         );
       }
       if (criterion instanceof IHierarchicalLabeledIdCriterion) {
-        if (criterion.criterionOption.type !== "studios") return;
-
         return (
-          <Form.Group>
-            <FilterSelect
-              type={criterion.criterionOption.type}
-              isMulti
-              onSelect={(items) => {
-                const newCriterion = _.cloneDeep(criterion);
-                newCriterion.value.items = items.map((i) => ({
-                  id: i.id,
-                  label: i.name!,
-                }));
-                setCriterion(newCriterion);
-              }}
-              ids={criterion.value.items.map((labeled) => labeled.id)}
-            />
-          </Form.Group>
+          <HierarchicalLabelValueFilter
+            criterion={criterion}
+            onValueChanged={onValueChanged}
+          />
         );
       }
       if (
         options &&
         !criterionIsHierarchicalLabelValue(criterion.value) &&
-        !criterionIsNumberValue(criterion.value)
+        !criterionIsNumberValue(criterion.value) &&
+        !Array.isArray(criterion.value)
       ) {
         defaultValue.current = criterion.value;
         return (
-          <Form.Group>
-            <Form.Control
-              as="select"
-              onChange={onChangedSingleSelect}
-              value={criterion.value.toString()}
-              className="btn-secondary"
-            >
-              {options.map((c) => (
-                <option key={c.toString()} value={c.toString()}>
-                  {c}
-                </option>
-              ))}
-            </Form.Control>
-          </Form.Group>
+          <OptionsFilter
+            criterion={criterion}
+            onValueChanged={onValueChanged}
+          />
         );
       }
       if (criterion instanceof DurationCriterion) {
-        if (
-          criterion.modifier === CriterionModifier.Equals ||
-          criterion.modifier === CriterionModifier.NotEquals
-        ) {
-          return (
-            <Form.Group>
-              <DurationInput
-                numericValue={
-                  criterion.value?.exact ? criterion.value.exact : 0
-                }
-                onValueChange={(v: number) => onChangedDuration(v, "exact")}
-              />
-            </Form.Group>
-          );
-        }
-
-        let lowerControl: JSX.Element | null = null;
-        if (
-          criterion.modifier === CriterionModifier.GreaterThan ||
-          criterion.modifier === CriterionModifier.Between ||
-          criterion.modifier === CriterionModifier.NotBetween
-        ) {
-          lowerControl = (
-            <Form.Group>
-              <DurationInput
-                numericValue={
-                  criterion.value?.lower ? criterion.value.lower : 0
-                }
-                onValueChange={(v: number) => onChangedDuration(v, "lower")}
-              />
-            </Form.Group>
-          );
-        }
-
-        let upperControl: JSX.Element | null = null;
-        if (
-          criterion.modifier === CriterionModifier.LessThan ||
-          criterion.modifier === CriterionModifier.Between ||
-          criterion.modifier === CriterionModifier.NotBetween
-        ) {
-          upperControl = (
-            <Form.Group>
-              <DurationInput
-                numericValue={
-                  criterion.value?.upper ? criterion.value.upper : 0
-                }
-                onValueChange={(v: number) => onChangedDuration(v, "upper")}
-              />
-            </Form.Group>
-          );
-        }
-
         return (
-          <>
-            {lowerControl}
-            {upperControl}
-          </>
+          <DurationFilter
+            criterion={criterion}
+            onValueChanged={onValueChanged}
+          />
         );
       }
       if (criterion instanceof NumberCriterion) {
-        if (
-          criterion.modifier === CriterionModifier.Equals ||
-          criterion.modifier === CriterionModifier.NotEquals
-        ) {
-          return (
-            <Form.Group>
-              <Form.Control
-                className="btn-secondary"
-                type="number"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  onNumberChanged(e, "exact")
-                }
-                onBlur={onBlurInput}
-                defaultValue={criterion.value?.exact ?? ""}
-              />
-            </Form.Group>
-          );
-        }
-
-        let lowerControl: JSX.Element | null = null;
-        if (
-          criterion.modifier === CriterionModifier.GreaterThan ||
-          criterion.modifier === CriterionModifier.Between ||
-          criterion.modifier === CriterionModifier.NotBetween
-        ) {
-          lowerControl = (
-            <Form.Group>
-              <Form.Control
-                className="btn-secondary"
-                type="number"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  onNumberChanged(e, "lower")
-                }
-                onBlur={onBlurInput}
-                defaultValue={criterion.value?.lower ?? ""}
-              />
-            </Form.Group>
-          );
-        }
-
-        let upperControl: JSX.Element | null = null;
-        if (
-          criterion.modifier === CriterionModifier.LessThan ||
-          criterion.modifier === CriterionModifier.Between ||
-          criterion.modifier === CriterionModifier.NotBetween
-        ) {
-          upperControl = (
-            <Form.Group>
-              <Form.Control
-                className="btn-secondary"
-                type="number"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  onNumberChanged(e, "upper")
-                }
-                onBlur={onBlurInput}
-                defaultValue={criterion.value?.upper ?? ""}
-              />
-            </Form.Group>
-          );
-        }
-
         return (
-          <>
-            {lowerControl}
-            {upperControl}
-          </>
+          <NumberFilter criterion={criterion} onValueChanged={onValueChanged} />
         );
       }
       return (
-        <Form.Group>
-          <Form.Control
-            className="btn-secondary"
-            type={criterion.criterionOption.inputType}
-            onChange={onChangedInput}
-            onBlur={onBlurInput}
-            defaultValue={criterion.value ? criterion.value.toString() : ""}
-          />
-        </Form.Group>
+        <InputFilter criterion={criterion} onValueChanged={onValueChanged} />
       );
-    }
-    function renderAdditional() {
-      if (criterion instanceof IHierarchicalLabeledIdCriterion) {
-        return (
-          <>
-            <Form.Group>
-              <Form.Check
-                checked={criterion.value.depth !== 0}
-                label={intl.formatMessage({ id: "include_child_studios" })}
-                onChange={() => {
-                  const newCriterion = _.cloneDeep(criterion);
-                  newCriterion.value.depth =
-                    newCriterion.value.depth !== 0 ? 0 : -1;
-                  setCriterion(newCriterion);
-                }}
-              />
-            </Form.Group>
-            {criterion.value.depth !== 0 && (
-              <Form.Group>
-                <Form.Control
-                  className="btn-secondary"
-                  type="number"
-                  placeholder={intl.formatMessage(messages.studio_depth)}
-                  onChange={(e) => {
-                    const newCriterion = _.cloneDeep(criterion);
-                    newCriterion.value.depth = e.target.value
-                      ? parseInt(e.target.value, 10)
-                      : -1;
-                    setCriterion(newCriterion);
-                  }}
-                  defaultValue={
-                    criterion.value && criterion.value.depth !== -1
-                      ? criterion.value.depth
-                      : ""
-                  }
-                  min="1"
-                />
-              </Form.Group>
-            )}
-          </>
-        );
-      }
     }
     return (
       <>
         <Form.Group>{renderModifier()}</Form.Group>
         {renderSelect()}
-        {renderAdditional()}
       </>
     );
   };
