@@ -9,7 +9,7 @@ import { SettingsInterfacePanel } from "./SettingsInterfacePanel/SettingsInterfa
 import { SettingsLogsPanel } from "./SettingsLogsPanel";
 import { SettingsTasksPanel } from "./SettingsTasksPanel/SettingsTasksPanel";
 import { SettingsPluginsPanel } from "./SettingsPluginsPanel";
-import { SettingsScrapersPanel } from "./SettingsScrapersPanel";
+import { SettingsScrapingPanel } from "./SettingsScrapingPanel";
 import { SettingsToolsPanel } from "./SettingsToolsPanel";
 import { SettingsDLNAPanel } from "./SettingsDLNAPanel";
 
@@ -54,8 +54,8 @@ export const Settings: React.FC = () => {
                 </Nav.Link>
               </Nav.Item>
               <Nav.Item>
-                <Nav.Link eventKey="scrapers">
-                  <FormattedMessage id="config.categories.scrapers" />
+                <Nav.Link eventKey="scraping">
+                  <FormattedMessage id="config.categories.scraping" />
                 </Nav.Link>
               </Nav.Item>
               <Nav.Item>
@@ -93,8 +93,8 @@ export const Settings: React.FC = () => {
               <Tab.Pane eventKey="tools" unmountOnExit>
                 <SettingsToolsPanel />
               </Tab.Pane>
-              <Tab.Pane eventKey="scrapers" unmountOnExit>
-                <SettingsScrapersPanel />
+              <Tab.Pane eventKey="scraping" unmountOnExit>
+                <SettingsScrapingPanel />
               </Tab.Pane>
               <Tab.Pane eventKey="plugins" unmountOnExit>
                 <SettingsPluginsPanel />

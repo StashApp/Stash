@@ -32,9 +32,6 @@ fragment ConfigGeneralData on ConfigGeneralResult {
   galleryExtensions
   excludes
   imageExcludes
-  scraperUserAgent
-  scraperCertCheck
-  scraperCDPPath
   stashBoxes {
     name
     endpoint
@@ -64,6 +61,12 @@ fragment ConfigDLNAData on ConfigDLNAResult {
   interfaces
 }
 
+fragment ConfigScrapingData on ConfigScrapingResult {
+  scraperUserAgent
+  scraperCertCheck
+  scraperCDPPath
+}
+
 fragment ConfigData on ConfigResult {
   general {
     ...ConfigGeneralData
@@ -73,5 +76,8 @@ fragment ConfigData on ConfigResult {
   }
   dlna {
     ...ConfigDLNAData
+  }
+  scraping {
+    ...ConfigScrapingData
   }
 }
