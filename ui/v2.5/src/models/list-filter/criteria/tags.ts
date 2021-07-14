@@ -1,6 +1,9 @@
-import { ILabeledIdCriterion, ILabeledIdCriterionOption } from "./criterion";
+import {
+  IHierarchicalLabeledIdCriterion,
+  ILabeledIdCriterionOption,
+} from "./criterion";
 
-export class TagsCriterion extends ILabeledIdCriterion {}
+export class TagsCriterion extends IHierarchicalLabeledIdCriterion {}
 
 export const TagsCriterionOption = new ILabeledIdCriterionOption(
   "tags",

@@ -3,8 +3,6 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
-	"strconv"
-
 	"github.com/stashapp/stash/pkg/database"
 	"github.com/stashapp/stash/pkg/models"
 )
@@ -127,6 +125,16 @@ func (qb *sceneMarkerQueryBuilder) Wall(q *string) ([]*models.SceneMarker, error
 	return qb.querySceneMarkers(query, nil)
 }
 
+func (qb *sceneMarkerQueryBuilder) makeFilter(sceneMarkerFilter *models.SceneMarkerFilterType) *filterBuilder {
+	query := &filterBuilder{}
+
+	query.handleCriterion(sceneMarkerTagsCriterionHandler(qb, sceneMarkerFilter.Tags))
+	query.handleCriterion(sceneMarkerSceneTagsCriterionHandler(qb, sceneMarkerFilter.SceneTags))
+	query.handleCriterion(sceneMarkerPerformersCriterionHandler(qb, sceneMarkerFilter.Performers))
+
+	return query
+}
+
 func (qb *sceneMarkerQueryBuilder) Query(sceneMarkerFilter *models.SceneMarkerFilterType, findFilter *models.FindFilterType) ([]*models.SceneMarker, int, error) {
 	if sceneMarkerFilter == nil {
 		sceneMarkerFilter = &models.SceneMarkerFilterType{}
@@ -135,121 +143,23 @@ func (qb *sceneMarkerQueryBuilder) Query(sceneMarkerFilter *models.SceneMarkerFi
 		findFilter = &models.FindFilterType{}
 	}
 
-	var whereClauses []string
-	var havingClauses []string
-	var args []interface{}
-	body := selectDistinctIDs("scene_markers")
-	body = body + `
-		left join tags as primary_tag on primary_tag.id = scene_markers.primary_tag_id
-		left join scenes as scene on scene.id = scene_markers.scene_id
-		left join scene_markers_tags as tags_join on tags_join.scene_marker_id = scene_markers.id
-		left join tags on tags_join.tag_id = tags.id
-	`
+	query := qb.newQuery()
 
-	if tagsFilter := sceneMarkerFilter.Tags; tagsFilter != nil && len(tagsFilter.Value) > 0 {
-		//select `scene_markers`.* from `scene_markers`
-		//left join `tags` as `primary_tags_join`
-		//  on `primary_tags_join`.`id` = `scene_markers`.`primary_tag_id`
-		//  and `primary_tags_join`.`id` in ('3', '37', '9', '89')
-		//left join `scene_markers_tags` as `tags_join`
-		//  on `tags_join`.`scene_marker_id` = `scene_markers`.`id`
-		//  and `tags_join`.`tag_id` in ('3', '37', '9', '89')
-		//group by `scene_markers`.`id`
-		//having ((count(distinct `primary_tags_join`.`id`) + count(distinct `tags_join`.`tag_id`)) = 4)
-
-		length := len(tagsFilter.Value)
-
-		if tagsFilter.Modifier == models.CriterionModifierIncludes || tagsFilter.Modifier == models.CriterionModifierIncludesAll {
-			body += " LEFT JOIN tags AS ptj ON ptj.id = scene_markers.primary_tag_id AND ptj.id IN " + getInBinding(length)
-			body += " LEFT JOIN scene_markers_tags AS tj ON tj.scene_marker_id = scene_markers.id AND tj.tag_id IN " + getInBinding(length)
-
-			// only one required for include any
-			requiredCount := 1
-
-			// all required for include all
-			if tagsFilter.Modifier == models.CriterionModifierIncludesAll {
-				requiredCount = length
-			}
-
-			havingClauses = append(havingClauses, "((COUNT(DISTINCT ptj.id) + COUNT(DISTINCT tj.tag_id)) >= "+strconv.Itoa(requiredCount)+")")
-		} else if tagsFilter.Modifier == models.CriterionModifierExcludes {
-			// excludes all of the provided ids
-			whereClauses = append(whereClauses, "scene_markers.primary_tag_id not in "+getInBinding(length))
-			whereClauses = append(whereClauses, "not exists (select smt.scene_marker_id from scene_markers_tags as smt where smt.scene_marker_id = scene_markers.id and smt.tag_id in "+getInBinding(length)+")")
-		}
-
-		for _, tagID := range tagsFilter.Value {
-			args = append(args, tagID)
-		}
-		for _, tagID := range tagsFilter.Value {
-			args = append(args, tagID)
-		}
-	}
-
-	if sceneTagsFilter := sceneMarkerFilter.SceneTags; sceneTagsFilter != nil && len(sceneTagsFilter.Value) > 0 {
-		length := len(sceneTagsFilter.Value)
-
-		if sceneTagsFilter.Modifier == models.CriterionModifierIncludes || sceneTagsFilter.Modifier == models.CriterionModifierIncludesAll {
-			body += " LEFT JOIN scenes_tags AS scene_tags_join ON scene_tags_join.scene_id = scene.id AND scene_tags_join.tag_id IN " + getInBinding(length)
-
-			// only one required for include any
-			requiredCount := 1
-
-			// all required for include all
-			if sceneTagsFilter.Modifier == models.CriterionModifierIncludesAll {
-				requiredCount = length
-			}
-
-			havingClauses = append(havingClauses, "COUNT(DISTINCT scene_tags_join.tag_id) >= "+strconv.Itoa(requiredCount))
-		} else if sceneTagsFilter.Modifier == models.CriterionModifierExcludes {
-			// excludes all of the provided ids
-			whereClauses = append(whereClauses, "not exists (select st.scene_id from scenes_tags as st where st.scene_id = scene.id AND st.tag_id IN "+getInBinding(length)+")")
-		}
-
-		for _, tagID := range sceneTagsFilter.Value {
-			args = append(args, tagID)
-		}
-	}
-
-	if performersFilter := sceneMarkerFilter.Performers; performersFilter != nil && len(performersFilter.Value) > 0 {
-		length := len(performersFilter.Value)
-
-		if performersFilter.Modifier == models.CriterionModifierIncludes || performersFilter.Modifier == models.CriterionModifierIncludesAll {
-			body += " LEFT JOIN performers_scenes as scene_performers ON scene.id = scene_performers.scene_id"
-			whereClauses = append(whereClauses, "scene_performers.performer_id IN "+getInBinding(length))
-
-			// only one required for include any
-			requiredCount := 1
-
-			// all required for include all
-			if performersFilter.Modifier == models.CriterionModifierIncludesAll {
-				requiredCount = length
-			}
-
-			havingClauses = append(havingClauses, "COUNT(DISTINCT scene_performers.performer_id) >= "+strconv.Itoa(requiredCount))
-		} else if performersFilter.Modifier == models.CriterionModifierExcludes {
-			// excludes all of the provided ids
-			whereClauses = append(whereClauses, "not exists (select sp.scene_id from performers_scenes as sp where sp.scene_id = scene.id AND sp.performer_id IN "+getInBinding(length)+")")
-		}
-
-		for _, performerID := range performersFilter.Value {
-			args = append(args, performerID)
-		}
-	}
+	query.body = selectDistinctIDs("scene_markers")
 
 	if q := findFilter.Q; q != nil && *q != "" {
 		searchColumns := []string{"scene_markers.title", "scene.title"}
 		clause, thisArgs := getSearchBinding(searchColumns, *q, false)
-		whereClauses = append(whereClauses, clause)
-		args = append(args, thisArgs...)
+		query.addWhere(clause)
+		query.addArg(thisArgs...)
 	}
 
-	if tagID := sceneMarkerFilter.TagID; tagID != nil {
-		whereClauses = append(whereClauses, "(scene_markers.primary_tag_id = "+*tagID+" OR tags.id = "+*tagID+")")
-	}
+	filter := qb.makeFilter(sceneMarkerFilter)
 
-	sortAndPagination := qb.getSceneMarkerSort(findFilter) + getPagination(findFilter)
-	idsResult, countResult, err := qb.executeFindQuery(body, args, sortAndPagination, whereClauses, havingClauses, []string{})
+	query.addFilter(filter)
+
+	query.sortAndPagination = qb.getSceneMarkerSort(findFilter) + getPagination(findFilter)
+	idsResult, countResult, err := query.executeFind()
 	if err != nil {
 		return nil, 0, err
 	}
@@ -265,6 +175,64 @@ func (qb *sceneMarkerQueryBuilder) Query(sceneMarkerFilter *models.SceneMarkerFi
 	}
 
 	return sceneMarkers, countResult, nil
+}
+
+func sceneMarkerTagsCriterionHandler(qb *sceneMarkerQueryBuilder, tags *models.HierarchicalMultiCriterionInput) criterionHandlerFunc {
+	return func(f *filterBuilder) {
+		if tags != nil && len(tags.Value) > 0 {
+			addHierarchicalWithClause(f, tags.Value, "tags_for_marker", tagTable, "tags_relations", "", tags.Depth)
+
+			f.addWith(`marker_tags AS (
+SELECT mt.scene_marker_id, t.id AS root_tag_id, t.child_id FROM scene_markers_tags mt
+INNER JOIN tags_for_marker t ON t.child_id = mt.tag_id
+UNION
+SELECT m.id, t.id, t.child_id FROM scene_markers m
+INNER JOIN tags_for_marker t	 ON t.child_id = m.primary_tag_id
+)`)
+
+			f.addJoin("marker_tags", "", "marker_tags.scene_marker_id = scene_markers.id")
+
+			addHierarchicalConditionClauses(f, tags, "marker_tags", "root_tag_id")
+		}
+	}
+}
+
+func sceneMarkerSceneTagsCriterionHandler(qb *sceneMarkerQueryBuilder, tags *models.HierarchicalMultiCriterionInput) criterionHandlerFunc {
+	return func(f *filterBuilder) {
+		if tags != nil && len(tags.Value) > 0 {
+			addHierarchicalWithClause(f, tags.Value, "tags_for_scene", tagTable, "tags_relations", "", tags.Depth)
+
+			f.addWith(`scene_tags AS (
+SELECT st.scene_id, t.id AS root_tag_id FROM scenes_tags st
+INNER JOIN tags_for_scene t ON t.child_id = st.tag_id
+)`)
+
+			f.addJoin("scene_tags", "", "scene_tags.scene_id = scene_markers.scene_id")
+
+			addHierarchicalConditionClauses(f, tags, "scene_tags", "root_tag_id")
+		}
+	}
+}
+
+func sceneMarkerPerformersCriterionHandler(qb *sceneMarkerQueryBuilder, performers *models.MultiCriterionInput) criterionHandlerFunc {
+	h := joinedMultiCriterionHandlerBuilder{
+		primaryTable: sceneTable,
+		joinTable:    performersScenesTable,
+		joinAs:       "performers_join",
+		primaryFK:    sceneIDColumn,
+		foreignFK:    performerIDColumn,
+
+		addJoinTable: func(f *filterBuilder) {
+			f.addJoin(performersScenesTable, "performers_join", "performers_join.scene_id = scene_markers.scene_id")
+		},
+	}
+
+	handler := h.handler(performers)
+	return func(f *filterBuilder) {
+		// Make sure scenes is included, otherwise excludes filter fails
+		f.addJoin(sceneTable, "", "scenes.id = scene_markers.scene_id")
+		handler(f)
+	}
 }
 
 func (qb *sceneMarkerQueryBuilder) getSceneMarkerSort(findFilter *models.FindFilterType) string {

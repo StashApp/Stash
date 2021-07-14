@@ -8,4 +8,12 @@ fragment TagData on Tag {
   image_count
   gallery_count
   performer_count
+
+  parents {
+    ...SlimTagData
+  }
+
+  children {
+    ...SlimTagData
+  }
 }

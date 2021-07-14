@@ -20,18 +20,21 @@ export const tagFilterHook = (tag: GQL.TagDataFragment) => {
     ) {
       // add the tag if not present
       if (
-        !tagCriterion.value.find((p) => {
+        !tagCriterion.value.items.find((p) => {
           return p.id === tag.id;
         })
       ) {
-        tagCriterion.value.push(tagValue);
+        tagCriterion.value.items.push(tagValue);
       }
 
       tagCriterion.modifier = GQL.CriterionModifier.IncludesAll;
     } else {
       // overwrite
       tagCriterion = new TagsCriterion(TagsCriterionOption);
-      tagCriterion.value = [tagValue];
+      tagCriterion.value = {
+        items: [tagValue],
+        depth: 0,
+      };
       filter.criteria.push(tagCriterion);
     }
 

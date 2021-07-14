@@ -10,6 +10,8 @@ type TagReader interface {
 	FindByGalleryID(galleryID int) ([]*Tag, error)
 	FindByName(name string, nocase bool) (*Tag, error)
 	FindByNames(names []string, nocase bool) ([]*Tag, error)
+	FindByParentTagID(parentID int) ([]*Tag, error)
+	FindByChildTagID(childID int) ([]*Tag, error)
 	Count() (int, error)
 	All() ([]*Tag, error)
 	// TODO - this interface is temporary until the filter schema can fully
@@ -18,6 +20,8 @@ type TagReader interface {
 	Query(tagFilter *TagFilterType, findFilter *FindFilterType) ([]*Tag, int, error)
 	GetImage(tagID int) ([]byte, error)
 	GetAliases(tagID int) ([]string, error)
+	FindAllAncestors(tagID int, excludeIDs []int) ([]*Tag, error)
+	FindAllDescendants(tagID int, excludeIDs []int) ([]*Tag, error)
 }
 
 type TagWriter interface {
@@ -29,6 +33,8 @@ type TagWriter interface {
 	DestroyImage(tagID int) error
 	UpdateAliases(tagID int, aliases []string) error
 	Merge(source []int, destination int) error
+	UpdateParentTags(tagID int, parentIDs []int) error
+	UpdateChildTags(tagID int, parentIDs []int) error
 }
 
 type TagReaderWriter interface {

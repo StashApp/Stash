@@ -130,6 +130,75 @@ func (_m *TagReaderWriter) Find(id int) (*models.Tag, error) {
 	return r0, r1
 }
 
+// FindAllAncestors provides a mock function with given fields: tagID, excludeIDs
+func (_m *TagReaderWriter) FindAllAncestors(tagID int, excludeIDs []int) ([]*models.Tag, error) {
+	ret := _m.Called(tagID, excludeIDs)
+
+	var r0 []*models.Tag
+	if rf, ok := ret.Get(0).(func(int, []int) []*models.Tag); ok {
+		r0 = rf(tagID, excludeIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Tag)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int, []int) error); ok {
+		r1 = rf(tagID, excludeIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindAllDescendants provides a mock function with given fields: tagID, excludeIDs
+func (_m *TagReaderWriter) FindAllDescendants(tagID int, excludeIDs []int) ([]*models.Tag, error) {
+	ret := _m.Called(tagID, excludeIDs)
+
+	var r0 []*models.Tag
+	if rf, ok := ret.Get(0).(func(int, []int) []*models.Tag); ok {
+		r0 = rf(tagID, excludeIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Tag)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int, []int) error); ok {
+		r1 = rf(tagID, excludeIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindByChildTagID provides a mock function with given fields: childID
+func (_m *TagReaderWriter) FindByChildTagID(childID int) ([]*models.Tag, error) {
+	ret := _m.Called(childID)
+
+	var r0 []*models.Tag
+	if rf, ok := ret.Get(0).(func(int) []*models.Tag); ok {
+		r0 = rf(childID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Tag)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(childID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindByGalleryID provides a mock function with given fields: galleryID
 func (_m *TagReaderWriter) FindByGalleryID(galleryID int) ([]*models.Tag, error) {
 	ret := _m.Called(galleryID)
@@ -215,6 +284,29 @@ func (_m *TagReaderWriter) FindByNames(names []string, nocase bool) ([]*models.T
 	var r1 error
 	if rf, ok := ret.Get(1).(func([]string, bool) error); ok {
 		r1 = rf(names, nocase)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindByParentTagID provides a mock function with given fields: parentID
+func (_m *TagReaderWriter) FindByParentTagID(parentID int) ([]*models.Tag, error) {
+	ret := _m.Called(parentID)
+
+	var r0 []*models.Tag
+	if rf, ok := ret.Get(0).(func(int) []*models.Tag); ok {
+		r0 = rf(parentID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Tag)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(parentID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -464,6 +556,20 @@ func (_m *TagReaderWriter) UpdateAliases(tagID int, aliases []string) error {
 	return r0
 }
 
+// UpdateChildTags provides a mock function with given fields: tagID, parentIDs
+func (_m *TagReaderWriter) UpdateChildTags(tagID int, parentIDs []int) error {
+	ret := _m.Called(tagID, parentIDs)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(int, []int) error); ok {
+		r0 = rf(tagID, parentIDs)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateFull provides a mock function with given fields: updatedTag
 func (_m *TagReaderWriter) UpdateFull(updatedTag models.Tag) (*models.Tag, error) {
 	ret := _m.Called(updatedTag)
@@ -494,6 +600,20 @@ func (_m *TagReaderWriter) UpdateImage(tagID int, image []byte) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(int, []byte) error); ok {
 		r0 = rf(tagID, image)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateParentTags provides a mock function with given fields: tagID, parentIDs
+func (_m *TagReaderWriter) UpdateParentTags(tagID int, parentIDs []int) error {
+	ret := _m.Called(tagID, parentIDs)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(int, []int) error); ok {
+		r0 = rf(tagID, parentIDs)
 	} else {
 		r0 = ret.Error(0)
 	}

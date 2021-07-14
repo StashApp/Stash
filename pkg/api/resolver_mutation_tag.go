@@ -75,6 +75,28 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input models.TagCreate
 			}
 		}
 
+		if input.ParentIds != nil && len(input.ParentIds) > 0 {
+			ids, err := utils.StringSliceToIntSlice(input.ParentIds)
+			if err != nil {
+				return err
+			}
+
+			if err := qb.UpdateParentTags(t.ID, ids); err != nil {
+				return err
+			}
+		}
+
+		if input.ChildIds != nil && len(input.ChildIds) > 0 {
+			ids, err := utils.StringSliceToIntSlice(input.ChildIds)
+			if err != nil {
+				return err
+			}
+
+			if err := qb.UpdateChildTags(t.ID, ids); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}); err != nil {
 		return nil, err
@@ -161,6 +183,41 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input models.TagUpdate
 			}
 		}
 
+		var parentIDs []int
+		var childIDs []int
+
+		if translator.hasField("parent_ids") {
+			parentIDs, err = utils.StringSliceToIntSlice(input.ParentIds)
+			if err != nil {
+				return err
+			}
+		}
+
+		if translator.hasField("child_ids") {
+			childIDs, err = utils.StringSliceToIntSlice(input.ChildIds)
+			if err != nil {
+				return err
+			}
+		}
+
+		if parentIDs != nil || childIDs != nil {
+			if err := tag.EnsureUniqueHierarchy(tagID, parentIDs, childIDs, qb); err != nil {
+				return err
+			}
+		}
+
+		if parentIDs != nil {
+			if err := qb.UpdateParentTags(tagID, parentIDs); err != nil {
+				return err
+			}
+		}
+
+		if childIDs != nil {
+			if err := qb.UpdateChildTags(tagID, childIDs); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}); err != nil {
 		return nil, err
@@ -242,7 +299,21 @@ func (r *mutationResolver) TagsMerge(ctx context.Context, input models.TagsMerge
 			return fmt.Errorf("Tag with ID %d not found", destination)
 		}
 
+		parents, children, err := tag.MergeHierarchy(destination, source, qb)
+		if err != nil {
+			return err
+		}
+
 		if err = qb.Merge(source, destination); err != nil {
+			return err
+		}
+
+		err = qb.UpdateParentTags(destination, parents)
+		if err != nil {
+			return err
+		}
+		err = qb.UpdateChildTags(destination, children)
+		if err != nil {
 			return err
 		}
 

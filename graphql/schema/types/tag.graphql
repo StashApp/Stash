@@ -11,6 +11,9 @@ type Tag {
   image_count: Int # Resolver
   gallery_count: Int # Resolver
   performer_count: Int
+
+  parents: [Tag!]!
+  children: [Tag!]!
 }
 
 input TagCreateInput {
@@ -19,6 +22,9 @@ input TagCreateInput {
 
   """This should be a URL or a base64 encoded data URL"""
   image: String
+
+  parent_ids: [ID!]
+  child_ids: [ID!]
 }
 
 input TagUpdateInput {
@@ -28,6 +34,9 @@ input TagUpdateInput {
 
   """This should be a URL or a base64 encoded data URL"""
   image: String
+
+  parent_ids: [ID!]
+  child_ids: [ID!]
 }
 
 input TagDestroyInput {
