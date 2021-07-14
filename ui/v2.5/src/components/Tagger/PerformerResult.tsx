@@ -16,6 +16,10 @@ export type PerformerOperation =
   | { type: "existing"; data: GQL.PerformerDataFragment }
   | { type: "skip" };
 
+export interface IPerformerOperations {
+  [x: string]: PerformerOperation;
+}
+
 interface IPerformerResultProps {
   performer: IStashBoxPerformer;
   setPerformer: (data: PerformerOperation) => void;
