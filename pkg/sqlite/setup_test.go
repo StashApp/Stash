@@ -605,6 +605,7 @@ func createScenes(sqb models.SceneReaderWriter, n int) error {
 			OCounter: getOCounter(i),
 			Duration: getSceneDuration(i),
 			Height:   getHeight(i),
+			Width:    getWidth(i),
 			Date:     getSceneDate(i),
 		}
 

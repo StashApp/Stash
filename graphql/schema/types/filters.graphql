@@ -28,6 +28,11 @@ enum ResolutionEnum {
   "8k", EIGHT_K
 }
 
+input ResolutionCriterionInput {
+  value: ResolutionEnum!
+  modifier: CriterionModifier!
+}
+
 input PerformerFilterType {
   AND: PerformerFilterType
   OR: PerformerFilterType
@@ -126,7 +131,7 @@ input SceneFilterType {
   """Filter by o-counter"""
   o_counter: IntCriterionInput
   """Filter by resolution"""
-  resolution: ResolutionEnum
+  resolution: ResolutionCriterionInput
   """Filter by duration (in seconds)"""
   duration: IntCriterionInput
   """Filter to only include scenes which have markers. `true` or `false`"""
@@ -215,7 +220,7 @@ input GalleryFilterType {
   """Filter by organized"""
   organized: Boolean
   """Filter by average image resolution"""
-  average_resolution: ResolutionEnum
+  average_resolution: ResolutionCriterionInput
   """Filter to only include galleries with this studio"""
   studios: HierarchicalMultiCriterionInput
   """Filter to only include galleries with these tags"""
@@ -282,7 +287,7 @@ input ImageFilterType {
   """Filter by o-counter"""
   o_counter: IntCriterionInput
   """Filter by resolution"""
-  resolution: ResolutionEnum
+  resolution: ResolutionCriterionInput
   """Filter to only include images missing this property"""
   is_missing: String
   """Filter to only include images with this studio"""

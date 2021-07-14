@@ -914,7 +914,10 @@ func TestGalleryQueryAverageResolution(t *testing.T) {
 		qb := r.Gallery()
 		resolution := models.ResolutionEnumLow
 		galleryFilter := models.GalleryFilterType{
-			AverageResolution: &resolution,
+			AverageResolution: &models.ResolutionCriterionInput{
+				Value:    resolution,
+				Modifier: models.CriterionModifierEquals,
+			},
 		}
 
 		// not verifying average - just ensure we get at least one

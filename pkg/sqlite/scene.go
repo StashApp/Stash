@@ -495,20 +495,22 @@ func getDurationWhereClause(durationFilter models.IntCriterionInput, column stri
 	return clause, args
 }
 
-func resolutionCriterionHandler(resolution *models.ResolutionEnum, heightColumn string, widthColumn string) criterionHandlerFunc {
+func resolutionCriterionHandler(resolution *models.ResolutionCriterionInput, heightColumn string, widthColumn string) criterionHandlerFunc {
 	return func(f *filterBuilder) {
-		if resolution != nil && resolution.IsValid() {
-			min := resolution.GetMinResolution()
-			max := resolution.GetMaxResolution()
+		if resolution != nil && resolution.Value.IsValid() {
+			min := resolution.Value.GetMinResolution()
+			max := resolution.Value.GetMaxResolution()
 
 			widthHeight := fmt.Sprintf("MIN(%s, %s)", widthColumn, heightColumn)
 
-			if min > 0 {
-				f.addWhere(widthHeight + " >= " + strconv.Itoa(min))
-			}
-
-			if max > 0 {
-				f.addWhere(widthHeight + " < " + strconv.Itoa(max))
+			if resolution.Modifier == models.CriterionModifierEquals {
+				f.addWhere(fmt.Sprintf("%s BETWEEN %d AND %d", widthHeight, min, max))
+			} else if resolution.Modifier == models.CriterionModifierNotEquals {
+				f.addWhere(fmt.Sprintf("%s NOT BETWEEN %d AND %d", widthHeight, min, max))
+			} else if resolution.Modifier == models.CriterionModifierLessThan {
+				f.addWhere(fmt.Sprintf("%s < %d", widthHeight, min))
+			} else if resolution.Modifier == models.CriterionModifierGreaterThan {
+				f.addWhere(fmt.Sprintf("%s > %d", widthHeight, max))
 			}
 		}
 	}

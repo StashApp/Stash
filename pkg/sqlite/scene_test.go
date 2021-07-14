@@ -648,7 +648,10 @@ func verifyScenesResolution(t *testing.T, resolution models.ResolutionEnum) {
 	withTxn(func(r models.Repository) error {
 		sqb := r.Scene()
 		sceneFilter := models.SceneFilterType{
-			Resolution: &resolution,
+			Resolution: &models.ResolutionCriterionInput{
+				Value:    resolution,
+				Modifier: models.CriterionModifierEquals,
+			},
 		}
 
 		scenes := queryScene(t, sqb, &sceneFilter, nil)
@@ -677,6 +680,76 @@ func verifySceneResolution(t *testing.T, height sql.NullInt64, resolution models
 	case models.ResolutionEnumFourK:
 		assert.True(h >= 2160)
 	}
+}
+
+func TestAllResolutionsHaveResolutionRange(t *testing.T) {
+	for _, resolution := range models.AllResolutionEnum {
+		assert.NotZero(t, resolution.GetMinResolution(), "Define resolution range for %s in extension_resolution.go", resolution)
+		assert.NotZero(t, resolution.GetMaxResolution(), "Define resolution range for %s in extension_resolution.go", resolution)
+	}
+}
+
+func TestSceneQueryResolutionModifiers(t *testing.T) {
+	if err := withRollbackTxn(func(r models.Repository) error {
+		qb := r.Scene()
+		sceneNoResolution, _ := createScene(qb, 0, 0)
+		firstScene540P, _ := createScene(qb, 960, 540)
+		secondScene540P, _ := createScene(qb, 1280, 719)
+		firstScene720P, _ := createScene(qb, 1280, 720)
+		secondScene720P, _ := createScene(qb, 1280, 721)
+		thirdScene720P, _ := createScene(qb, 1920, 1079)
+		scene1080P, _ := createScene(qb, 1920, 1080)
+
+		scenesEqualTo720P := queryScenes(t, qb, models.ResolutionEnumStandardHd, models.CriterionModifierEquals)
+		scenesNotEqualTo720P := queryScenes(t, qb, models.ResolutionEnumStandardHd, models.CriterionModifierNotEquals)
+		scenesGreaterThan720P := queryScenes(t, qb, models.ResolutionEnumStandardHd, models.CriterionModifierGreaterThan)
+		scenesLessThan720P := queryScenes(t, qb, models.ResolutionEnumStandardHd, models.CriterionModifierLessThan)
+
+		assert.Subset(t, scenesEqualTo720P, []*models.Scene{firstScene720P, secondScene720P, thirdScene720P})
+		assert.NotSubset(t, scenesEqualTo720P, []*models.Scene{sceneNoResolution, firstScene540P, secondScene540P, scene1080P})
+
+		assert.Subset(t, scenesNotEqualTo720P, []*models.Scene{sceneNoResolution, firstScene540P, secondScene540P, scene1080P})
+		assert.NotSubset(t, scenesNotEqualTo720P, []*models.Scene{firstScene720P, secondScene720P, thirdScene720P})
+
+		assert.Subset(t, scenesGreaterThan720P, []*models.Scene{scene1080P})
+		assert.NotSubset(t, scenesGreaterThan720P, []*models.Scene{sceneNoResolution, firstScene540P, secondScene540P, firstScene720P, secondScene720P, thirdScene720P})
+
+		assert.Subset(t, scenesLessThan720P, []*models.Scene{sceneNoResolution, firstScene540P, secondScene540P})
+		assert.NotSubset(t, scenesLessThan720P, []*models.Scene{scene1080P, firstScene720P, secondScene720P, thirdScene720P})
+
+		return nil
+	}); err != nil {
+		t.Error(err.Error())
+	}
+}
+
+func queryScenes(t *testing.T, queryBuilder models.SceneReaderWriter, resolution models.ResolutionEnum, modifier models.CriterionModifier) []*models.Scene {
+	sceneFilter := models.SceneFilterType{
+		Resolution: &models.ResolutionCriterionInput{
+			Value:    resolution,
+			Modifier: modifier,
+		},
+	}
+
+	return queryScene(t, queryBuilder, &sceneFilter, nil)
+}
+
+func createScene(queryBuilder models.SceneReaderWriter, width int64, height int64) (*models.Scene, error) {
+	name := fmt.Sprintf("TestSceneQueryResolutionModifiers %d %d", width, height)
+	scene := models.Scene{
+		Path: name,
+		Width: sql.NullInt64{
+			Int64: width,
+			Valid: true,
+		},
+		Height: sql.NullInt64{
+			Int64: height,
+			Valid: true,
+		},
+		Checksum: sql.NullString{String: utils.MD5FromString(name), Valid: true},
+	}
+
+	return queryBuilder.Create(scene)
 }
 
 func TestSceneQueryHasMarkers(t *testing.T) {

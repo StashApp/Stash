@@ -3,7 +3,6 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
-	"strconv"
 
 	"github.com/stashapp/stash/pkg/models"
 )
@@ -426,23 +425,25 @@ func galleryPerformerTagsCriterionHandler(qb *galleryQueryBuilder, performerTags
 	}
 }
 
-func galleryAverageResolutionCriterionHandler(qb *galleryQueryBuilder, resolution *models.ResolutionEnum) criterionHandlerFunc {
+func galleryAverageResolutionCriterionHandler(qb *galleryQueryBuilder, resolution *models.ResolutionCriterionInput) criterionHandlerFunc {
 	return func(f *filterBuilder) {
-		if resolution != nil && resolution.IsValid() {
+		if resolution != nil && resolution.Value.IsValid() {
 			qb.imagesRepository().join(f, "images_join", "galleries.id")
 			f.addJoin("images", "", "images_join.image_id = images.id")
 
-			min := resolution.GetMinResolution()
-			max := resolution.GetMaxResolution()
+			min := resolution.Value.GetMinResolution()
+			max := resolution.Value.GetMaxResolution()
 
 			const widthHeight = "avg(MIN(images.width, images.height))"
 
-			if min > 0 {
-				f.addHaving(widthHeight + " >= " + strconv.Itoa(min))
-			}
-
-			if max > 0 {
-				f.addHaving(widthHeight + " < " + strconv.Itoa(max))
+			if resolution.Modifier == models.CriterionModifierEquals {
+				f.addHaving(fmt.Sprintf("%s BETWEEN %d AND %d", widthHeight, min, max))
+			} else if resolution.Modifier == models.CriterionModifierNotEquals {
+				f.addHaving(fmt.Sprintf("%s NOT BETWEEN %d AND %d", widthHeight, min, max))
+			} else if resolution.Modifier == models.CriterionModifierLessThan {
+				f.addHaving(fmt.Sprintf("%s < %d", widthHeight, min))
+			} else if resolution.Modifier == models.CriterionModifierGreaterThan {
+				f.addHaving(fmt.Sprintf("%s > %d", widthHeight, max))
 			}
 		}
 	}

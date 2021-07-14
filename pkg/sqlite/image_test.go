@@ -389,7 +389,10 @@ func verifyImagesResolution(t *testing.T, resolution models.ResolutionEnum) {
 	withTxn(func(r models.Repository) error {
 		sqb := r.Image()
 		imageFilter := models.ImageFilterType{
-			Resolution: &resolution,
+			Resolution: &models.ResolutionCriterionInput{
+				Value:    resolution,
+				Modifier: models.CriterionModifierEquals,
+			},
 		}
 
 		images, _, err := sqb.Query(&imageFilter, nil)
