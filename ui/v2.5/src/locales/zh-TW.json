@@ -296,8 +296,10 @@
         "heading": "自定義 CSS",
         "option_label": "啟用自定義 CSS"
       },
-      "handy_connection_key": "Handy 連線金鑰",
-      "handy_connection_key_desc": "播放支援互動性的短片時所用的 Handy 連線金鑰。",
+      "handy_connection_key": {
+        "description": "播放支援互動性的短片時所用的 Handy 連線金鑰。",
+        "heading": "Handy 連線金鑰"
+      },
       "language": {
         "heading": "語言"
       },

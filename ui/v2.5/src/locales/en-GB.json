@@ -307,8 +307,14 @@
         "heading": "Custom CSS",
         "option_label": "Custom CSS enabled"
       },
-      "handy_connection_key": "Handy Connection Key",
-      "handy_connection_key_desc": "Handy connection key to use for interactive scenes.",
+      "handy_connection_key": {
+        "description": "Handy connection key to use for interactive scenes.",
+        "heading": "Handy Connection Key"
+      },
+      "script_offset": {
+        "description": "Time offset in milliseconds for interactive scripts playback.",
+        "heading": "Funscript Offset (ms)"
+      },
       "language": {
         "heading": "Language"
       },

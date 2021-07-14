@@ -253,6 +253,10 @@ func (r *mutationResolver) ConfigureInterface(ctx context.Context, input models.
 		c.Set(config.HandyKey, *input.HandyKey)
 	}
 
+	if input.ScriptOffset != nil {
+		c.Set(config.ScriptOffset, *input.ScriptOffset)
+	}
+
 	if err := c.Write(); err != nil {
 		return makeConfigInterfaceResult(), err
 	}

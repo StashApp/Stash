@@ -37,6 +37,7 @@ export const SettingsInterfacePanel: React.FC = () => {
   const [cssEnabled, setCSSEnabled] = useState<boolean>(false);
   const [language, setLanguage] = useState<string>("en");
   const [handyKey, setHandyKey] = useState<string>();
+  const [scriptOffset, setScriptOffset] = useState<number>(0);
 
   const [updateInterfaceConfig] = useConfigureInterface({
     menuItems: menuItemIds,
@@ -51,6 +52,7 @@ export const SettingsInterfacePanel: React.FC = () => {
     language,
     slideshowDelay,
     handyKey,
+    scriptOffset,
   });
 
   useEffect(() => {
@@ -67,6 +69,7 @@ export const SettingsInterfacePanel: React.FC = () => {
     setLanguage(iCfg?.language ?? "en-US");
     setSlideshowDelay(iCfg?.slideshowDelay ?? 5000);
     setHandyKey(iCfg?.handyKey ?? "");
+    setScriptOffset(iCfg?.scriptOffset ?? 0);
   }, [config]);
 
   async function onSave() {
@@ -277,7 +280,9 @@ export const SettingsInterfacePanel: React.FC = () => {
       </Form.Group>
 
       <Form.Group>
-        <h5>{intl.formatMessage({ id: "config.ui.handy_connection_key" })}</h5>
+        <h5>
+          {intl.formatMessage({ id: "config.ui.handy_connection_key.heading" })}
+        </h5>
         <Form.Control
           className="col col-sm-6 text-input"
           value={handyKey}
@@ -286,7 +291,23 @@ export const SettingsInterfacePanel: React.FC = () => {
           }}
         />
         <Form.Text className="text-muted">
-          {intl.formatMessage({ id: "config.ui.handy_connection_key_desc" })}
+          {intl.formatMessage({
+            id: "config.ui.handy_connection_key.description",
+          })}
+        </Form.Text>
+      </Form.Group>
+      <Form.Group>
+        <h5>{intl.formatMessage({ id: "config.ui.script_offset.heading" })}</h5>
+        <Form.Control
+          className="col col-sm-6 text-input"
+          type="number"
+          value={scriptOffset}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setScriptOffset(Number.parseInt(e.currentTarget.value, 10));
+          }}
+        />
+        <Form.Text className="text-muted">
+          {intl.formatMessage({ id: "config.ui.script_offset.description" })}
         </Form.Text>
       </Form.Group>
 

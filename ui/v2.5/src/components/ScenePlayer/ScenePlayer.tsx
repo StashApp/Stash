@@ -54,7 +54,10 @@ export class ScenePlayerImpl extends React.Component<
     this.state = {
       scrubberPosition: 0,
       config: this.makeJWPlayerConfig(props.scene),
-      interactiveClient: new Interactive(this.props.config?.handyKey || ""),
+      interactiveClient: new Interactive(
+        this.props.config?.handyKey || "",
+        this.props.config?.scriptOffset || 0
+      ),
     };
 
     // Default back to Direct Streaming

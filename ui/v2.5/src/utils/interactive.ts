@@ -26,11 +26,13 @@ function convertFunscriptToCSV(funscript: IFunscript) {
 export class Interactive {
   private _connected: boolean;
   private _playing: boolean;
+  private _scriptOffset: number;
   private _handy: Handy;
 
-  constructor(handyKey: string) {
+  constructor(handyKey: string, scriptOffset: number) {
     this._handy = new Handy();
     this._handy.connectionKey = handyKey;
+    this._scriptOffset = scriptOffset;
     this._connected = false;
     this._playing = false;
   }
@@ -76,7 +78,7 @@ export class Interactive {
       return;
     }
     this._playing = await this._handy
-      .syncPlay(true, Math.round(position * 1000))
+      .syncPlay(true, Math.round(position * 1000 + this._scriptOffset))
       .then(() => true);
   }
 
