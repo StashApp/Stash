@@ -296,9 +296,10 @@ export class ScenePlayerImpl extends React.Component<
       image: scene.paths.screenshot,
       width: "100%",
       height: "100%",
-      floating: {
-        dismissible: true,
-      },
+      // FIXME: Enabling this in jwplayer 8.11.5 causes full screen in mobile to default to picture-in-picture
+      // floating: {
+      //   dismissible: true,
+      // },
       cast: {},
       primary: "html5",
       autostart:
