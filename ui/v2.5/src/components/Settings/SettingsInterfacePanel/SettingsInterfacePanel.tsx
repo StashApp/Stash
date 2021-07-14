@@ -28,6 +28,10 @@ export const SettingsInterfacePanel: React.FC = () => {
   );
   const [soundOnPreview, setSoundOnPreview] = useState<boolean>(true);
   const [wallShowTitle, setWallShowTitle] = useState<boolean>(true);
+  const [
+  	customPerformerImageLocation,
+	setCustomPerformerImageLocation
+  ] = useState<string>();
   const [wallPlayback, setWallPlayback] = useState<string>("video");
   const [maximumLoopDuration, setMaximumLoopDuration] = useState<number>(0);
   const [autostartVideo, setAutostartVideo] = useState<boolean>(false);
@@ -42,6 +46,7 @@ export const SettingsInterfacePanel: React.FC = () => {
     menuItems: menuItemIds,
     soundOnPreview,
     wallShowTitle,
+    customPerformerImageLocation,
     wallPlayback,
     maximumLoopDuration,
     autostartVideo,
@@ -58,6 +63,7 @@ export const SettingsInterfacePanel: React.FC = () => {
     setMenuItemIds(iCfg?.menuItems ?? allMenuItems.map((item) => item.id));
     setSoundOnPreview(iCfg?.soundOnPreview ?? true);
     setWallShowTitle(iCfg?.wallShowTitle ?? true);
+    setCustomPerformerImageLocation(iCfg?.customPerformerImageLocation ?? "");
     setWallPlayback(iCfg?.wallPlayback ?? "video");
     setMaximumLoopDuration(iCfg?.maximumLoopDuration ?? 0);
     setAutostartVideo(iCfg?.autostartVideo ?? false);
@@ -134,6 +140,22 @@ export const SettingsInterfacePanel: React.FC = () => {
           {intl.formatMessage({ id: "config.ui.menu_items.description" })}
         </Form.Text>
       </Form.Group>
+
+      <Form.Group>
+        <h5>{intl.formatMessage({id: "config.ui.performers.heading"})}</h5>
+	<Form.Text className="set-custom-performer-image-destination">
+		{intl.formatMessage({ id: "config.ui.performers.options.performer_image_destination.description" })}
+	</Form.Text>
+
+        <Form.Control
+          className="col col-sm-6 text-input"
+          value={customPerformerImageLocation}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setCustomPerformerImageLocation(e.currentTarget.value);
+          }}
+	/>
+      </Form.Group>
+
       <Form.Group>
         <h5>{intl.formatMessage({ id: "config.ui.scene_wall.heading" })}</h5>
         <Form.Check

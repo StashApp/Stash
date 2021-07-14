@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/stashapp/stash/pkg/manager"
+	"github.com/stashapp/stash/pkg/manager/config"
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/utils"
 )
@@ -39,10 +40,19 @@ func (rs performerRoutes) Image(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(image) == 0 || defaultParam == "true" {
-		image, _ = getRandomPerformerImageUsingName(performer.Name.String, performer.Gender.String)
-	}
+		// Use the config to check if there is a custom performer image path defined.
+		c := config.GetInstance()
+		var customImageDir string = c.GetCustomPerformerImageLocation();
 
-	utils.ServeImage(image, w, r)
+		if (customImageDir != "") {
+			image, _ = getRandomPerformerImageUsingName(performer.Name.String, performer.Gender.String, customImageDir)
+		} else {
+				image, _ = getRandomPerformerImageUsingName(performer.Name.String, performer.Gender.String, "")
+		}
+
+		utils.ServeImage(image, w, r)
+
+	}
 }
 
 func PerformerCtx(next http.Handler) http.Handler {

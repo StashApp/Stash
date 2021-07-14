@@ -320,6 +320,14 @@
         "description": "Show or hide different types of content on the navigation bar",
         "heading": "Menu Items"
       },
+      "performers": {
+        "heading": "Performers",
+	"options": {
+	   "performer_image_destination": {
+	      "description": "Set a custom path for performer images."
+	   }
+	}
+      },
       "preview_type": {
         "description": "Configuration for wall items",
         "heading": "Preview Type",

@@ -179,6 +179,8 @@ input ConfigInterfaceInput {
   soundOnPreview: Boolean
   """Show title and tags in wall view"""
   wallShowTitle: Boolean
+  """Custom Performer Image Location"""
+  customPerformerImageLocation: String
   """Wall playback type"""
   wallPlayback: String
   """Maximum duration (in seconds) in which a scene video will loop in the scene player"""
@@ -205,6 +207,8 @@ type ConfigInterfaceResult {
   soundOnPreview: Boolean
   """Show title and tags in wall view"""
   wallShowTitle: Boolean
+  """Custom Performer Image Location"""
+  customPerformerImageLocation: String
   """Wall playback type"""
   wallPlayback: String
   """Maximum duration (in seconds) in which a scene video will loop in the scene player"""

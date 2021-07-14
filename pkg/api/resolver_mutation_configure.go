@@ -213,6 +213,10 @@ func (r *mutationResolver) ConfigureInterface(ctx context.Context, input models.
 		c.Set(config.WallShowTitle, *input.WallShowTitle)
 	}
 
+	if input.CustomPerformerImageLocation != nil {
+		c.Set(config.CustomPerformerImageLocation, *input.CustomPerformerImageLocation)
+	}
+
 	if input.WallPlayback != nil {
 		c.Set(config.WallPlayback, *input.WallPlayback)
 	}
