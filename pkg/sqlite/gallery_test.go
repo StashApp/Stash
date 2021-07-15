@@ -238,7 +238,9 @@ func TestGalleryQueryPathAndRating(t *testing.T) {
 		},
 		And: &models.GalleryFilterType{
 			Rating: &models.IntCriterionInput{
-				Value:    int(galleryRating.Int64),
+				Exact:    int(galleryRating.Int64),
+				Upper:    int(galleryRating.Int64),
+				Lower:    int(galleryRating.Int64),
 				Modifier: models.CriterionModifierEquals,
 			},
 		},
@@ -268,7 +270,9 @@ func TestGalleryQueryPathNotRating(t *testing.T) {
 	}
 
 	ratingCriterion := models.IntCriterionInput{
-		Value:    int(galleryRating.Int64),
+		Exact:    int(galleryRating.Int64),
+		Upper:    int(galleryRating.Int64),
+		Lower:    int(galleryRating.Int64),
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -389,7 +393,9 @@ func verifyGalleryQuery(t *testing.T, filter models.GalleryFilterType, verifyFn 
 func TestGalleryQueryRating(t *testing.T) {
 	const rating = 3
 	ratingCriterion := models.IntCriterionInput{
-		Value:    rating,
+		Exact:    rating,
+		Upper:    rating,
+		Lower:    rating,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -830,7 +836,9 @@ func TestGalleryQueryPerformerTags(t *testing.T) {
 func TestGalleryQueryTagCount(t *testing.T) {
 	const tagCount = 1
 	tagCountCriterion := models.IntCriterionInput{
-		Value:    tagCount,
+		Exact:    tagCount,
+		Upper:    tagCount,
+		Lower:    tagCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -871,7 +879,9 @@ func verifyGalleriesTagCount(t *testing.T, tagCountCriterion models.IntCriterion
 func TestGalleryQueryPerformerCount(t *testing.T) {
 	const performerCount = 1
 	performerCountCriterion := models.IntCriterionInput{
-		Value:    performerCount,
+		Exact:    performerCount,
+		Upper:    performerCount,
+		Lower:    performerCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -928,7 +938,9 @@ func TestGalleryQueryAverageResolution(t *testing.T) {
 func TestGalleryQueryImageCount(t *testing.T) {
 	const imageCount = 0
 	imageCountCriterion := models.IntCriterionInput{
-		Value:    imageCount,
+		Exact:    imageCount,
+		Upper:    imageCount,
+		Lower:    imageCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 

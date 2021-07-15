@@ -270,7 +270,9 @@ func TestSceneQueryPathAndRating(t *testing.T) {
 		},
 		And: &models.SceneFilterType{
 			Rating: &models.IntCriterionInput{
-				Value:    int(sceneRating.Int64),
+				Exact:    int(sceneRating.Int64),
+				Upper:    int(sceneRating.Int64),
+				Lower:    int(sceneRating.Int64),
 				Modifier: models.CriterionModifierEquals,
 			},
 		},
@@ -300,7 +302,9 @@ func TestSceneQueryPathNotRating(t *testing.T) {
 	}
 
 	ratingCriterion := models.IntCriterionInput{
-		Value:    int(sceneRating.Int64),
+		Exact:    int(sceneRating.Int64),
+		Upper:    int(sceneRating.Int64),
+		Lower:    int(sceneRating.Int64),
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -450,7 +454,9 @@ func verifyString(t *testing.T, value string, criterion models.StringCriterionIn
 func TestSceneQueryRating(t *testing.T) {
 	const rating = 3
 	ratingCriterion := models.IntCriterionInput{
-		Value:    rating,
+		Exact:    rating,
+		Upper:    rating,
+		Lower:    rating,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -499,23 +505,25 @@ func verifyInt64(t *testing.T, value sql.NullInt64, criterion models.IntCriterio
 		assert.True(value.Valid, "expect is null values to be null")
 	}
 	if criterion.Modifier == models.CriterionModifierEquals {
-		assert.Equal(int64(criterion.Value), value.Int64)
+		assert.Equal(int64(criterion.Exact), value.Int64)
 	}
 	if criterion.Modifier == models.CriterionModifierNotEquals {
-		assert.NotEqual(int64(criterion.Value), value.Int64)
+		assert.NotEqual(int64(criterion.Exact), value.Int64)
 	}
 	if criterion.Modifier == models.CriterionModifierGreaterThan {
-		assert.True(value.Int64 > int64(criterion.Value))
+		assert.True(value.Int64 > int64(criterion.Lower))
 	}
 	if criterion.Modifier == models.CriterionModifierLessThan {
-		assert.True(value.Int64 < int64(criterion.Value))
+		assert.True(value.Int64 < int64(criterion.Upper))
 	}
 }
 
 func TestSceneQueryOCounter(t *testing.T) {
 	const oCounter = 1
 	oCounterCriterion := models.IntCriterionInput{
-		Value:    oCounter,
+		Exact:    oCounter,
+		Upper:    oCounter,
+		Lower:    oCounter,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -552,16 +560,16 @@ func verifyInt(t *testing.T, value int, criterion models.IntCriterionInput) {
 	t.Helper()
 	assert := assert.New(t)
 	if criterion.Modifier == models.CriterionModifierEquals {
-		assert.Equal(criterion.Value, value)
+		assert.Equal(criterion.Exact, value)
 	}
 	if criterion.Modifier == models.CriterionModifierNotEquals {
-		assert.NotEqual(criterion.Value, value)
+		assert.NotEqual(criterion.Exact, value)
 	}
 	if criterion.Modifier == models.CriterionModifierGreaterThan {
-		assert.Greater(value, criterion.Value)
+		assert.Greater(value, criterion.Lower)
 	}
 	if criterion.Modifier == models.CriterionModifierLessThan {
-		assert.Less(value, criterion.Value)
+		assert.Less(value, criterion.Upper)
 	}
 }
 
@@ -569,7 +577,9 @@ func TestSceneQueryDuration(t *testing.T) {
 	duration := 200.432
 
 	durationCriterion := models.IntCriterionInput{
-		Value:    int(duration),
+		Exact:    int(duration),
+		Upper:    int(duration),
+		Lower:    int(duration),
 		Modifier: models.CriterionModifierEquals,
 	}
 	verifyScenesDuration(t, durationCriterion)
@@ -601,9 +611,9 @@ func verifyScenesDuration(t *testing.T, durationCriterion models.IntCriterionInp
 
 		for _, scene := range scenes {
 			if durationCriterion.Modifier == models.CriterionModifierEquals {
-				assert.True(t, scene.Duration.Float64 >= float64(durationCriterion.Value) && scene.Duration.Float64 < float64(durationCriterion.Value+1))
+				assert.True(t, scene.Duration.Float64 >= float64(durationCriterion.Exact) && scene.Duration.Float64 < float64(durationCriterion.Exact+1))
 			} else if durationCriterion.Modifier == models.CriterionModifierNotEquals {
-				assert.True(t, scene.Duration.Float64 < float64(durationCriterion.Value) || scene.Duration.Float64 >= float64(durationCriterion.Value+1))
+				assert.True(t, scene.Duration.Float64 < float64(durationCriterion.Exact) || scene.Duration.Float64 >= float64(durationCriterion.Exact+1))
 			} else {
 				verifyFloat64(t, scene.Duration, durationCriterion)
 			}
@@ -622,16 +632,16 @@ func verifyFloat64(t *testing.T, value sql.NullFloat64, criterion models.IntCrit
 		assert.True(value.Valid, "expect is null values to be null")
 	}
 	if criterion.Modifier == models.CriterionModifierEquals {
-		assert.Equal(float64(criterion.Value), value.Float64)
+		assert.Equal(float64(criterion.Exact), value.Float64)
 	}
 	if criterion.Modifier == models.CriterionModifierNotEquals {
-		assert.NotEqual(float64(criterion.Value), value.Float64)
+		assert.NotEqual(float64(criterion.Exact), value.Float64)
 	}
 	if criterion.Modifier == models.CriterionModifierGreaterThan {
-		assert.True(value.Float64 > float64(criterion.Value))
+		assert.True(value.Float64 > float64(criterion.Lower))
 	}
 	if criterion.Modifier == models.CriterionModifierLessThan {
-		assert.True(value.Float64 < float64(criterion.Value))
+		assert.True(value.Float64 < float64(criterion.Upper))
 	}
 }
 
@@ -1277,7 +1287,9 @@ func TestSceneQueryPagination(t *testing.T) {
 func TestSceneQueryTagCount(t *testing.T) {
 	const tagCount = 1
 	tagCountCriterion := models.IntCriterionInput{
-		Value:    tagCount,
+		Exact:    tagCount,
+		Upper:    tagCount,
+		Lower:    tagCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -1318,7 +1330,9 @@ func verifyScenesTagCount(t *testing.T, tagCountCriterion models.IntCriterionInp
 func TestSceneQueryPerformerCount(t *testing.T) {
 	const performerCount = 1
 	performerCountCriterion := models.IntCriterionInput{
-		Value:    performerCount,
+		Exact:    performerCount,
+		Upper:    performerCount,
+		Lower:    performerCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 

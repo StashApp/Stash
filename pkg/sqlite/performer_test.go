@@ -145,7 +145,9 @@ func TestPerformerQueryEthnicityAndRating(t *testing.T) {
 		},
 		And: &models.PerformerFilterType{
 			Rating: &models.IntCriterionInput{
-				Value:    int(performerRating.Int64),
+				Exact:    int(performerRating.Int64),
+				Upper:    int(performerRating.Int64),
+				Lower:    int(performerRating.Int64),
 				Modifier: models.CriterionModifierEquals,
 			},
 		},
@@ -175,7 +177,9 @@ func TestPerformerQueryPathNotRating(t *testing.T) {
 	}
 
 	ratingCriterion := models.IntCriterionInput{
-		Value:    int(performerRating.Int64),
+		Exact:    int(performerRating.Int64),
+		Upper:    int(performerRating.Int64),
+		Lower:    int(performerRating.Int64),
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -341,7 +345,9 @@ func TestPerformerDestroyPerformerImage(t *testing.T) {
 func TestPerformerQueryAge(t *testing.T) {
 	const age = 19
 	ageCriterion := models.IntCriterionInput{
-		Value:    age,
+		Exact:    age,
+		Upper:    age,
+		Lower:    age,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -553,7 +559,9 @@ func TestPerformerQueryTags(t *testing.T) {
 func TestPerformerQueryTagCount(t *testing.T) {
 	const tagCount = 1
 	tagCountCriterion := models.IntCriterionInput{
-		Value:    tagCount,
+		Exact:    tagCount,
+		Upper:    tagCount,
+		Lower:    tagCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -594,7 +602,9 @@ func verifyPerformersTagCount(t *testing.T, tagCountCriterion models.IntCriterio
 func TestPerformerQuerySceneCount(t *testing.T) {
 	const sceneCount = 1
 	sceneCountCriterion := models.IntCriterionInput{
-		Value:    sceneCount,
+		Exact:    sceneCount,
+		Upper:    sceneCount,
+		Lower:    sceneCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -635,7 +645,9 @@ func verifyPerformersSceneCount(t *testing.T, sceneCountCriterion models.IntCrit
 func TestPerformerQueryImageCount(t *testing.T) {
 	const imageCount = 1
 	imageCountCriterion := models.IntCriterionInput{
-		Value:    imageCount,
+		Exact:    imageCount,
+		Upper:    imageCount,
+		Lower:    imageCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -685,7 +697,9 @@ func verifyPerformersImageCount(t *testing.T, imageCountCriterion models.IntCrit
 func TestPerformerQueryGalleryCount(t *testing.T) {
 	const galleryCount = 1
 	galleryCountCriterion := models.IntCriterionInput{
-		Value:    galleryCount,
+		Exact:    galleryCount,
+		Upper:    galleryCount,
+		Lower:    galleryCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -809,7 +823,9 @@ func TestPerformerStashIDs(t *testing.T) {
 func TestPerformerQueryRating(t *testing.T) {
 	const rating = 3
 	ratingCriterion := models.IntCriterionInput{
-		Value:    rating,
+		Exact:    rating,
+		Upper:    rating,
+		Lower:    rating,
 		Modifier: models.CriterionModifierEquals,
 	}
 

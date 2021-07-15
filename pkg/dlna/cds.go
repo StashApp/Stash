@@ -684,7 +684,7 @@ func (me *contentDirectoryService) getRatingScenes(paths []string, host string) 
 	sceneFilter := &models.SceneFilterType{
 		Rating: &models.IntCriterionInput{
 			Modifier: models.CriterionModifierEquals,
-			Value:    r,
+			Exact:    r,
 		},
 	}
 

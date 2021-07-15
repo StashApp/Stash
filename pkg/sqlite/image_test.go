@@ -200,7 +200,9 @@ func TestImageQueryPathAndRating(t *testing.T) {
 		},
 		And: &models.ImageFilterType{
 			Rating: &models.IntCriterionInput{
-				Value:    int(imageRating.Int64),
+				Exact:    int(imageRating.Int64),
+				Upper:    int(imageRating.Int64),
+				Lower:    int(imageRating.Int64),
 				Modifier: models.CriterionModifierEquals,
 			},
 		},
@@ -230,7 +232,9 @@ func TestImageQueryPathNotRating(t *testing.T) {
 	}
 
 	ratingCriterion := models.IntCriterionInput{
-		Value:    int(imageRating.Int64),
+		Exact:    int(imageRating.Int64),
+		Upper:    int(imageRating.Int64),
+		Lower:    int(imageRating.Int64),
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -295,7 +299,9 @@ func TestImageIllegalQuery(t *testing.T) {
 func TestImageQueryRating(t *testing.T) {
 	const rating = 3
 	ratingCriterion := models.IntCriterionInput{
-		Value:    rating,
+		Exact:    rating,
+		Upper:    rating,
+		Lower:    rating,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -340,7 +346,9 @@ func verifyImagesRating(t *testing.T, ratingCriterion models.IntCriterionInput) 
 func TestImageQueryOCounter(t *testing.T) {
 	const oCounter = 1
 	oCounterCriterion := models.IntCriterionInput{
-		Value:    oCounter,
+		Exact:    oCounter,
+		Upper:    oCounter,
+		Lower:    oCounter,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -953,7 +961,9 @@ func TestImageQueryPerformerTags(t *testing.T) {
 func TestImageQueryTagCount(t *testing.T) {
 	const tagCount = 1
 	tagCountCriterion := models.IntCriterionInput{
-		Value:    tagCount,
+		Exact:    tagCount,
+		Upper:    tagCount,
+		Lower:    tagCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -994,7 +1004,9 @@ func verifyImagesTagCount(t *testing.T, tagCountCriterion models.IntCriterionInp
 func TestImageQueryPerformerCount(t *testing.T) {
 	const performerCount = 1
 	performerCountCriterion := models.IntCriterionInput{
-		Value:    performerCount,
+		Exact:    performerCount,
+		Upper:    performerCount,
+		Lower:    performerCount,
 		Modifier: models.CriterionModifierEquals,
 	}
 

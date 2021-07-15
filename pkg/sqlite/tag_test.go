@@ -280,7 +280,7 @@ func TestTagQueryIsMissingImage(t *testing.T) {
 
 func TestTagQuerySceneCount(t *testing.T) {
 	countCriterion := models.IntCriterionInput{
-		Value:    1,
+		Exact:    1,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -292,7 +292,7 @@ func TestTagQuerySceneCount(t *testing.T) {
 	countCriterion.Modifier = models.CriterionModifierLessThan
 	verifyTagSceneCount(t, countCriterion)
 
-	countCriterion.Value = 0
+	countCriterion.Exact = 0
 	countCriterion.Modifier = models.CriterionModifierGreaterThan
 	verifyTagSceneCount(t, countCriterion)
 }
@@ -324,7 +324,7 @@ func verifyTagSceneCount(t *testing.T, sceneCountCriterion models.IntCriterionIn
 
 // func TestTagQueryMarkerCount(t *testing.T) {
 // 	countCriterion := models.IntCriterionInput{
-// 		Value:    1,
+// 		Exact:    1,
 // 		Modifier: models.CriterionModifierEquals,
 // 	}
 
@@ -366,7 +366,7 @@ func verifyTagMarkerCount(t *testing.T, markerCountCriterion models.IntCriterion
 
 func TestTagQueryImageCount(t *testing.T) {
 	countCriterion := models.IntCriterionInput{
-		Value:    1,
+		Exact:    1,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -378,7 +378,7 @@ func TestTagQueryImageCount(t *testing.T) {
 	countCriterion.Modifier = models.CriterionModifierLessThan
 	verifyTagImageCount(t, countCriterion)
 
-	countCriterion.Value = 0
+	countCriterion.Exact = 0
 	countCriterion.Modifier = models.CriterionModifierGreaterThan
 	verifyTagImageCount(t, countCriterion)
 }
@@ -408,7 +408,7 @@ func verifyTagImageCount(t *testing.T, imageCountCriterion models.IntCriterionIn
 
 func TestTagQueryGalleryCount(t *testing.T) {
 	countCriterion := models.IntCriterionInput{
-		Value:    1,
+		Exact:    1,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -420,7 +420,7 @@ func TestTagQueryGalleryCount(t *testing.T) {
 	countCriterion.Modifier = models.CriterionModifierLessThan
 	verifyTagGalleryCount(t, countCriterion)
 
-	countCriterion.Value = 0
+	countCriterion.Exact = 0
 	countCriterion.Modifier = models.CriterionModifierGreaterThan
 	verifyTagGalleryCount(t, countCriterion)
 }
@@ -450,7 +450,7 @@ func verifyTagGalleryCount(t *testing.T, imageCountCriterion models.IntCriterion
 
 func TestTagQueryPerformerCount(t *testing.T) {
 	countCriterion := models.IntCriterionInput{
-		Value:    1,
+		Exact:    1,
 		Modifier: models.CriterionModifierEquals,
 	}
 
@@ -462,7 +462,7 @@ func TestTagQueryPerformerCount(t *testing.T) {
 	countCriterion.Modifier = models.CriterionModifierLessThan
 	verifyTagPerformerCount(t, countCriterion)
 
-	countCriterion.Value = 0
+	countCriterion.Exact = 0
 	countCriterion.Modifier = models.CriterionModifierGreaterThan
 	verifyTagPerformerCount(t, countCriterion)
 }
